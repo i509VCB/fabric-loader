@@ -17,10 +17,15 @@
 package net.fabricmc.loader.entrypoint.minecraft.hooks;
 
 import net.fabricmc.loader.FabricLoader;
+import net.fabricmc.loader.api.ModContainer;
+import net.fabricmc.loader.api.entrypoint.EntrypointContainer;
 
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 public final class EntrypointUtils {
@@ -38,24 +43,33 @@ public final class EntrypointUtils {
 	private static <T> void invoke0(String name, Class<T> type, Consumer<? super T> invoker) {
 		@SuppressWarnings("deprecation")
 		FabricLoader loader = FabricLoader.INSTANCE;
-		Collection<T> entrypoints = loader.getEntrypoints(name, type);
-		List<Throwable> errors = new ArrayList<>();
+		Collection<EntrypointContainer<T>> containers = loader.getEntrypointContainers(name, type);
+		List<Map.Entry<ModContainer, Throwable>> errors = new ArrayList<>();
 
 		loader.getLogger().debug("Iterating over entrypoint '" + name + "'");
 
-		for (T e : entrypoints) {
+		for (EntrypointContainer<T> container : containers) {
 			try {
-				invoker.accept(e);
+				for (T e : container.getEntrypoints()) {
+					invoker.accept(e);
+				}
 			} catch (Throwable t) {
-				errors.add(t);
+				errors.add(new AbstractMap.SimpleImmutableEntry<>(container.getModContainer(), t));
 			}
 		}
 
 		if (!errors.isEmpty()) {
 			RuntimeException exception = new RuntimeException("Could not execute entrypoint stage '" + name + "' due to errors!");
 
-			for (Throwable t : errors) {
-				exception.addSuppressed(t);
+			Map<ModContainer, Exception> exceptions = new HashMap<>();
+
+			for (Map.Entry<ModContainer, Throwable> t : errors) {
+				Exception modException = exceptions.computeIfAbsent(t.getKey(), k -> new RuntimeException("Errors from mod: " + k.getMetadata().getId() + ":"));
+				modException.addSuppressed(t.getValue());
+			}
+
+			for (Exception value : exceptions.values()) {
+				exception.addSuppressed(value);
 			}
 
 			throw exception;

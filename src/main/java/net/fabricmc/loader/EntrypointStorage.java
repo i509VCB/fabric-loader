@@ -21,6 +21,8 @@ import net.fabricmc.loader.ModContainer;
 import net.fabricmc.loader.api.EntrypointException;
 import net.fabricmc.loader.api.LanguageAdapter;
 import net.fabricmc.loader.api.LanguageAdapterException;
+import net.fabricmc.loader.api.entrypoint.EntrypointContainer;
+import net.fabricmc.loader.entrypoint.EntrypointContainerImpl;
 import net.fabricmc.loader.launch.common.FabricLauncherBase;
 import net.fabricmc.loader.metadata.EntrypointMetadata;
 
@@ -29,6 +31,8 @@ import java.util.*;
 class EntrypointStorage {
 	interface Entry {
 		<T> T getOrCreate(Class<T> type) throws Exception;
+
+		ModContainer getModContainer();
 	}
 
 	private static class OldEntry implements Entry {
@@ -66,6 +70,11 @@ class EntrypointStorage {
 				return (T) object;
 			}
 		}
+
+		@Override
+		public ModContainer getModContainer() {
+			return mod;
+		}
 	}
 
 	private static class NewEntry implements Entry {
@@ -94,6 +103,11 @@ class EntrypointStorage {
 			}
 			//noinspection unchecked
 			return (T) o;
+		}
+
+		@Override
+		public ModContainer getModContainer() {
+			return mod;
 		}
 
 		private <T> T create(Class<T> type) throws Exception {
@@ -160,5 +174,34 @@ class EntrypointStorage {
 		} else {
 			return results;
 		}
+	}
+
+	public <T> Collection<EntrypointContainer<T>> getContainers(String key, Class<T> type) {
+		List<Entry> entries = entryMap.get(key);
+
+		if (entries == null) {
+			return Collections.emptyList();
+		}
+
+		EntrypointException exception = null;
+		Map<ModContainer, EntrypointContainerImpl<T>> containers = new HashMap<>();
+
+		for (Entry entry : entries) {
+			try {
+				containers.computeIfAbsent(entry.getModContainer(), EntrypointContainerImpl::new).add(entry.getOrCreate(type));
+			} catch (Throwable t) {
+				if (exception == null) {
+					exception = new EntrypointException("Could not look up entries for entrypoint " + key + "!");
+				}
+
+				exception.addSuppressed(new EntrypointException("Caused by " + entry.getModContainer() + ":", t));
+			}
+		}
+
+		if (exception != null) {
+			throw exception;
+		}
+
+		return Collections.unmodifiableCollection(containers.values());
 	}
 }
