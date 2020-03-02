@@ -14,17 +14,27 @@
  * limitations under the License.
  */
 
-package net.fabricmc.loader.api;
+package net.fabricmc.loader.entrypoint;
 
-public class EntrypointException extends RuntimeException {
-	private final String key;
+import net.fabricmc.loader.ModContainer;
+import net.fabricmc.loader.api.entrypoint.EntrypointContainer;
 
-	public EntrypointException(String key, String causeModid, Throwable cause) {
-		super("Exception while loading entries for entrypoint '" + key + "' provided by '" + causeModid + "'", cause);
-		this.key = key;
+public class EntrypointContainerImpl<T> implements EntrypointContainer<T> {
+	private final ModContainer container;
+	private final T entrypoint;
+
+	public EntrypointContainerImpl(ModContainer container, T entrypoint) {
+		this.container = container;
+		this.entrypoint = entrypoint;
 	}
 
-	public String getKey() {
-		return key;
+	@Override
+	public T getEntrypoint() {
+		return entrypoint;
+	}
+
+	@Override
+	public ModContainer getProvidingModContainer() {
+		return container;
 	}
 }
