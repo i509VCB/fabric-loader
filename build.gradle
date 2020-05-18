@@ -5,7 +5,7 @@ import com.google.gson.JsonObject
 plugins {
 	id 'java'
 	id 'maven-publish'
-
+	id("net.minecrell.licenser") version "0.4"
 	id 'idea'
 	id 'eclipse'
 	id("fabric-loom") version "0.2.7-SNAPSHOT"
@@ -66,6 +66,8 @@ dependencies {
 		transitive = false
 	}
 	compile 'net.sf.jopt-simple:jopt-simple:5.0.3'
+
+	compile project(":plugin-spi")
 }
 
 processResources {
@@ -164,5 +166,5 @@ publishing {
 		}
 	}
 }
-apply from: 'https://github.com/FabricMC/fabric-docs/raw/master/gradle/license.gradle'
+//apply from: 'https://github.com/FabricMC/fabric-docs/raw/master/gradle/license.gradle' - Outdated much?
 apply from: 'https://github.com/FabricMC/fabric-docs/raw/master/gradle/ideconfig.gradle'

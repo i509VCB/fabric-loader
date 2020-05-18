@@ -4,7 +4,12 @@ pluginManagement {
 			url = "http://maven.fabricmc.net"
 			name = "FabricMC"
 		}
+		maven {
+			url = "https://files.minecraftforge.net/maven"
+		}
 		gradlePluginPortal()
 	}
 }
 rootProject.name='fabric-loader'
+
+include ":plugin-spi"
