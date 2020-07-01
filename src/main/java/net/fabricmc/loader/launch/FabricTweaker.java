@@ -17,7 +17,7 @@
 package net.fabricmc.loader.launch;
 
 import net.fabricmc.api.EnvType;
-import net.fabricmc.loader.FabricLoader;
+import net.fabricmc.loader.AbstractFabricLoader;
 import net.fabricmc.loader.api.entrypoint.PreLaunchEntrypoint;
 import net.fabricmc.loader.entrypoint.minecraft.hooks.EntrypointUtils;
 import net.fabricmc.loader.game.GameProvider;
@@ -96,11 +96,9 @@ public abstract class FabricTweaker extends FabricLauncherBase implements ITweak
 			throw new RuntimeException("Could not locate Minecraft: provider locate failed");
 		}
 
-		@SuppressWarnings("deprecation")
-		FabricLoader loader = FabricLoader.INSTANCE;
-		loader.setGameProvider(provider);
-		loader.load();
-		loader.freeze();
+		this.getLoader().setGameProvider(provider);
+		this.getLoader().load();
+		this.getLoader().freeze();
 
 		launchClassLoader.registerTransformer("net.fabricmc.loader.launch.FabricClassTransformer");
 
@@ -122,13 +120,13 @@ public abstract class FabricTweaker extends FabricLauncherBase implements ITweak
 			}
 		}
 
-		FabricLoader.INSTANCE.getAccessWidener().loadFromMods();
+		this.getLoader().getAccessWidener().loadFromMods();
 
 		MinecraftGameProvider.TRANSFORMER.locateEntrypoints(this);
 
 		// Setup Mixin environment
 		MixinBootstrap.init();
-		FabricMixinBootstrap.init(getEnvironmentType(), FabricLoader.INSTANCE);
+		FabricMixinBootstrap.init(getEnvironmentType(), this.getLoader());
 		MixinEnvironment.getDefaultEnvironment().setSide(getEnvironmentType() == EnvType.CLIENT ? MixinEnvironment.Side.CLIENT : MixinEnvironment.Side.SERVER);
 
 		EntrypointUtils.invoke("preLaunch", PreLaunchEntrypoint.class, PreLaunchEntrypoint::onPreLaunch);
@@ -186,5 +184,17 @@ public abstract class FabricTweaker extends FabricLauncherBase implements ITweak
 	@Override
 	public boolean isDevelopment() {
 		return isDevelopment;
+	}
+
+	@Override
+	protected AbstractFabricLoader createLoader() {
+		return new TweakerLoader();
+	}
+
+	class TweakerLoader extends AbstractFabricLoader {
+		@Override
+		public EnvType getEnvironmentType() {
+			return FabricTweaker.this.getEnvironmentType();
+		}
 	}
 }

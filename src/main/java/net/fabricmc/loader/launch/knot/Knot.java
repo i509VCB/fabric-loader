@@ -17,7 +17,7 @@
 package net.fabricmc.loader.launch.knot;
 
 import net.fabricmc.api.EnvType;
-import net.fabricmc.loader.FabricLoader;
+import net.fabricmc.loader.AbstractFabricLoader;
 import net.fabricmc.loader.api.entrypoint.PreLaunchEntrypoint;
 import net.fabricmc.loader.entrypoint.minecraft.hooks.EntrypointUtils;
 import net.fabricmc.loader.game.GameProvider;
@@ -102,7 +102,7 @@ public final class Knot extends FabricLauncherBase {
 		// Setup classloader
 		// TODO: Provide KnotCompatibilityClassLoader in non-exclusive-Fabric pre-1.13 environments?
 		boolean useCompatibility = provider.requiresUrlClassLoader() || Boolean.parseBoolean(System.getProperty("fabric.loader.useCompatibilityClassLoader", "false"));
-		classLoader = useCompatibility ? new KnotCompatibilityClassLoader(isDevelopment(), envType, provider) : new KnotClassLoader(isDevelopment(), envType, provider);
+		classLoader = useCompatibility ? new KnotCompatibilityClassLoader(this.getLoader(), isDevelopment(), envType, provider) : new KnotClassLoader(this.getLoader(), isDevelopment(), envType, provider);
 		ClassLoader cl = (ClassLoader) classLoader;
 
 		if (provider.isObfuscated()) {
@@ -121,16 +121,14 @@ public final class Knot extends FabricLauncherBase {
 
 		Thread.currentThread().setContextClassLoader(cl);
 
-		@SuppressWarnings("deprecation")
-		FabricLoader loader = FabricLoader.INSTANCE;
-		loader.setGameProvider(provider);
-		loader.load();
-		loader.freeze();
+		this.getLoader().setGameProvider(provider);
+		this.getLoader().load();
+		this.getLoader().freeze();
 
-		FabricLoader.INSTANCE.getAccessWidener().loadFromMods();
+		this.getLoader().getAccessWidener().loadFromMods();
 
 		MixinBootstrap.init();
-		FabricMixinBootstrap.init(getEnvironmentType(), loader);
+		FabricMixinBootstrap.init(getEnvironmentType(), this.getLoader());
 		FabricLauncherBase.finishMixinBootstrapping();
 
 		classLoader.getDelegate().initializeTransformers();
@@ -205,7 +203,7 @@ public final class Knot extends FabricLauncherBase {
 	@Override
 	public byte[] getClassByteArray(String name, boolean runTransformers) throws IOException {
 		if (runTransformers) {
-			return classLoader.getDelegate().getPreMixinClassByteArray(name, false);
+			return classLoader.getDelegate().getPreMixinClassByteArray(this.getLoader().getAccessWidener(), name, false);
 		} else {
 			return classLoader.getDelegate().getRawClassByteArray(name, false);
 		}
@@ -223,5 +221,17 @@ public final class Knot extends FabricLauncherBase {
 
 	public static void main(String[] args) {
 		new Knot(null, null).init(args);
+	}
+
+	@Override
+	protected AbstractFabricLoader createLoader() {
+		return new KnotLoader();
+	}
+
+	class KnotLoader extends AbstractFabricLoader {
+		@Override
+		public EnvType getEnvironmentType() {
+			return Knot.this.getEnvironmentType();
+		}
 	}
 }

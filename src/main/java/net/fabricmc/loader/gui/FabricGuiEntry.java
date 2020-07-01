@@ -20,7 +20,7 @@ import java.awt.GraphicsEnvironment;
 import java.util.HashSet;
 import java.util.Set;
 
-import net.fabricmc.loader.FabricLoader;
+import net.fabricmc.loader.AbstractFabricLoader;
 import net.fabricmc.loader.game.GameProvider;
 import net.fabricmc.loader.gui.FabricStatusTree.FabricStatusNode;
 import net.fabricmc.loader.gui.FabricStatusTree.FabricStatusTab;
@@ -38,12 +38,13 @@ public final class FabricGuiEntry {
 		FabricMainWindow.open(tree, shouldWait);
 	}
 
-	/** @param exitAfter If true then this will call {@link System#exit(int)} after showing the gui, otherwise this will
-	 *            return normally. */
-	public static void displayCriticalError(Throwable exception, boolean exitAfter) {
-		FabricLoader.INSTANCE.getLogger().fatal("A critical error occurred", exception);
+	/**
+	 * @param loader the instance of fabric loader
+	 * @param exitAfter If true then this will call {@link System#exit(int)} after showing the gui, otherwise this will  */
+	public static void displayCriticalError(AbstractFabricLoader loader, Throwable exception, boolean exitAfter) {
+		loader.getLogger().fatal("A critical error occurred", exception);
 
-		GameProvider provider = FabricLoader.INSTANCE.getGameProvider();
+		GameProvider provider = loader.getGameProvider();
 
 		if ((provider == null || provider.canOpenErrorGui()) && !GraphicsEnvironment.isHeadless()) {
 			FabricStatusTree tree = new FabricStatusTree();
@@ -60,7 +61,7 @@ public final class FabricGuiEntry {
 				open(tree);
 			} catch (Exception e) {
 				if (exitAfter) {
-					FabricLoader.INSTANCE.getLogger().warn("Failed to open the error gui!", e);
+					loader.getLogger().warn("Failed to open the error gui!", e);
 				} else {
 					throw new RuntimeException("Failed to open the error gui!", e);
 				}

@@ -16,12 +16,13 @@
 
 package net.fabricmc.loader.launch;
 
+import net.fabricmc.loader.launch.common.FabricLauncherBase;
 import net.fabricmc.loader.transformer.FabricTransformer;
 import net.minecraft.launchwrapper.IClassTransformer;
 
 public class FabricClassTransformer implements IClassTransformer {
 	@Override
 	public byte[] transform(String name, String transformedName, byte[] basicClass) {
-		return FabricTransformer.lwTransformerHook(name, transformedName, basicClass);
+		return FabricTransformer.lwTransformerHook(FabricLauncherBase.getLauncher().getLoader().getAccessWidener(), name, transformedName, basicClass);
 	}
 }

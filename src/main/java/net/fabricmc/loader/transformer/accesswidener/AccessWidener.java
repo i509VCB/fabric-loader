@@ -26,9 +26,9 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import net.fabricmc.loader.AbstractFabricLoader;
 import org.objectweb.asm.Opcodes;
 
-import net.fabricmc.loader.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.fabricmc.loader.metadata.LoaderModMetadata;
 import net.fabricmc.mappings.EntryTriple;
@@ -40,9 +40,9 @@ public class AccessWidener {
 	public Map<EntryTriple, Access> fieldAccess = new HashMap<>();
 	private Set<String> classes = new LinkedHashSet<>();
 
-	private final FabricLoader fabricLoader;
+	private final AbstractFabricLoader fabricLoader;
 
-	public AccessWidener(FabricLoader fabricLoader) {
+	public AccessWidener(AbstractFabricLoader fabricLoader) {
 		this.fabricLoader = fabricLoader;
 	}
 

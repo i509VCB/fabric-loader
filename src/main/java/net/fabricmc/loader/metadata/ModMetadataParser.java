@@ -17,7 +17,7 @@
 package net.fabricmc.loader.metadata;
 
 import com.google.gson.*;
-import net.fabricmc.loader.FabricLoader;
+import net.fabricmc.loader.AbstractFabricLoader;
 import net.fabricmc.loader.api.Version;
 import net.fabricmc.loader.util.version.VersionDeserializer;
 
@@ -50,7 +50,7 @@ public class ModMetadataParser {
 
 	private static final JsonParser JSON_PARSER = new JsonParser();
 
-	private static LoaderModMetadata getMod(FabricLoader loader, JsonObject object) {
+	private static LoaderModMetadata getMod(AbstractFabricLoader loader, JsonObject object) {
 		if (!object.has("schemaVersion")) {
 			return GSON_V0.fromJson(object, ModMetadataV0.class);
 		} else {
@@ -65,7 +65,7 @@ public class ModMetadataParser {
 		}
 	}
 
-	public static LoaderModMetadata[] getMods(FabricLoader loader, InputStream in) {
+	public static LoaderModMetadata[] getMods(AbstractFabricLoader loader, InputStream in) {
 		JsonElement el = JSON_PARSER.parse(new InputStreamReader(in));
 		if (el.isJsonObject()) {
 			LoaderModMetadata metadata = getMod(loader, el.getAsJsonObject());

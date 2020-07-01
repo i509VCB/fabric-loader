@@ -30,6 +30,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.entrypoint.EntrypointContainer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -55,13 +56,15 @@ import net.fabricmc.loader.transformer.accesswidener.AccessWidener;
 /**
  * The main class for mod loading operations.
  */
-public class FabricLoader implements net.fabricmc.loader.api.FabricLoader {
+public abstract class AbstractFabricLoader implements FabricLoader {
 	/**
-	 * @deprecated Use {@link net.fabricmc.loader.api.FabricLoader#getInstance()} where possible,
+	 * @deprecated Use {@link FabricLoader#getInstance()} where possible,
 	 * report missing areas as an issue.
+	 *
+	 * TODO: Move Entrypoint ASM to use FabricLauncherBase logic
 	 */
 	@Deprecated
-	public static final FabricLoader INSTANCE = new FabricLoader();
+	public static final AbstractFabricLoader INSTANCE = FabricLauncherBase.getLauncher().getLoader();
 
 	protected static Logger LOGGER = LogManager.getFormatterLogger("Fabric|Loader");
 
@@ -69,7 +72,7 @@ public class FabricLoader implements net.fabricmc.loader.api.FabricLoader {
 	protected List<ModContainer> mods = new ArrayList<>();
 
 	private final Map<String, LanguageAdapter> adapterMap = new HashMap<>();
-	private final EntrypointStorage entrypointStorage = new EntrypointStorage();
+	private final EntrypointStorage entrypointStorage = new EntrypointStorage(this);
 	private final AccessWidener accessWidener = new AccessWidener(this);
 
 	private boolean frozen = false;
@@ -81,7 +84,7 @@ public class FabricLoader implements net.fabricmc.loader.api.FabricLoader {
 	private File gameDir;
 	private File configDir;
 
-	protected FabricLoader() {
+	protected AbstractFabricLoader() {
 	}
 
 	/**
@@ -116,11 +119,6 @@ public class FabricLoader implements net.fabricmc.loader.api.FabricLoader {
 	@Override
 	public Object getGameInstance() {
 		return gameInstance;
-	}
-
-	@Override
-	public EnvType getEnvironmentType() {
-		return FabricLauncherBase.getLauncher().getEnvironmentType();
 	}
 
 	/**
@@ -168,7 +166,7 @@ public class FabricLoader implements net.fabricmc.loader.api.FabricLoader {
 		try {
 			setup();
 		} catch (ModResolutionException exception) {
-			FabricGuiEntry.displayCriticalError(exception, true);
+			FabricGuiEntry.displayCriticalError(this, exception, true);
 		}
 	}
 

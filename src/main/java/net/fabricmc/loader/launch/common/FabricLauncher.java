@@ -17,6 +17,7 @@
 package net.fabricmc.loader.launch.common;
 
 import net.fabricmc.api.EnvType;
+import net.fabricmc.loader.AbstractFabricLoader;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -50,4 +51,6 @@ public interface FabricLauncher {
 	String getTargetNamespace();
 
 	Collection<URL> getLoadTimeDependencies();
+
+	AbstractFabricLoader getLoader();
 }

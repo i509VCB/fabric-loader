@@ -16,12 +16,12 @@
 
 package net.fabricmc.loader.discovery;
 
-import net.fabricmc.loader.FabricLoader;
+import net.fabricmc.loader.AbstractFabricLoader;
 
 import java.net.URL;
 import java.util.function.Consumer;
 
 @FunctionalInterface
 public interface ModCandidateFinder {
-	void findCandidates(FabricLoader loader, Consumer<URL> urlProposer);
+	void findCandidates(AbstractFabricLoader loader, Consumer<URL> urlProposer);
 }

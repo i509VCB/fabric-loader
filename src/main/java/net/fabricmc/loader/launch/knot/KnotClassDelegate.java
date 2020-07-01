@@ -17,9 +17,11 @@
 package net.fabricmc.loader.launch.knot;
 
 import net.fabricmc.api.EnvType;
+import net.fabricmc.loader.AbstractFabricLoader;
 import net.fabricmc.loader.game.GameProvider;
 import net.fabricmc.loader.launch.common.FabricLauncherBase;
 import net.fabricmc.loader.transformer.FabricTransformer;
+import net.fabricmc.loader.transformer.accesswidener.AccessWidener;
 import net.fabricmc.loader.util.FileSystemUtil;
 import net.fabricmc.loader.util.UrlConversionException;
 import net.fabricmc.loader.util.UrlUtil;
@@ -53,6 +55,7 @@ class KnotClassDelegate {
 		}
 	}
 
+	private final AbstractFabricLoader loader;
 	private final Map<String, Metadata> metadataCache = new HashMap<>();
 	private final KnotClassLoaderInterface itf;
 	private final GameProvider provider;
@@ -61,7 +64,8 @@ class KnotClassDelegate {
 	private FabricMixinTransformerProxy mixinTransformer;
 	private boolean transformInitialized = false;
 
-	KnotClassDelegate(boolean isDevelopment, EnvType envType, KnotClassLoaderInterface itf, GameProvider provider) {
+	KnotClassDelegate(AbstractFabricLoader loader, boolean isDevelopment, EnvType envType, KnotClassLoaderInterface itf, GameProvider provider) {
+		this.loader = loader;
 		this.isDevelopment = isDevelopment;
 		this.envType = envType;
 		this.itf = itf;
@@ -149,7 +153,7 @@ class KnotClassDelegate {
 	}
 
 	public byte[] getPostMixinClassByteArray(String name) {
-		byte[] transformedClassArray = getPreMixinClassByteArray(name, true);
+		byte[] transformedClassArray = getPreMixinClassByteArray(this.loader.getAccessWidener(), name, true);
 		if (!transformInitialized || !canTransformClass(name)) {
 			return transformedClassArray;
 		}
@@ -160,7 +164,7 @@ class KnotClassDelegate {
 	/**
 	 * Runs all the class transformers except mixin
 	 */
-	public byte[] getPreMixinClassByteArray(String name, boolean skipOriginalLoader) {
+	public byte[] getPreMixinClassByteArray(AccessWidener accessWidener, String name, boolean skipOriginalLoader) {
 		// some of the transformers rely on dot notation
 		name = name.replace('/', '.');
 
@@ -182,7 +186,7 @@ class KnotClassDelegate {
 		}
 
 		if (input != null) {
-			return FabricTransformer.transform(isDevelopment, envType, name, input);
+			return FabricTransformer.transform(accessWidener, isDevelopment, envType, name, input);
 		}
 
 		return null;

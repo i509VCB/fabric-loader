@@ -17,6 +17,7 @@
 package net.fabricmc.loader.launch.common;
 
 import net.fabricmc.api.EnvType;
+import net.fabricmc.loader.AbstractFabricLoader;
 import net.fabricmc.loader.util.mappings.TinyRemapperMappingsHelper;
 import net.fabricmc.loader.util.UrlConversionException;
 import net.fabricmc.loader.util.UrlUtil;
@@ -46,9 +47,11 @@ public abstract class FabricLauncherBase implements FabricLauncher {
 	private static Map<String, Object> properties;
 	private static FabricLauncher launcher;
 	private static MappingConfiguration mappingConfiguration = new MappingConfiguration();
+	private final AbstractFabricLoader loaderImpl;
 
 	protected FabricLauncherBase() {
 		setLauncher(this);
+		this.loaderImpl = this.createLoader();
 	}
 
 	public static File getLaunchDirectory(Arguments argMap) {
@@ -63,6 +66,16 @@ public abstract class FabricLauncherBase implements FabricLauncher {
 	public MappingConfiguration getMappingConfiguration() {
 		return mappingConfiguration;
 	}
+
+	@Override
+	public AbstractFabricLoader getLoader() {
+		return this.loaderImpl;
+	}
+
+	/**
+	 * Creates an instance of fabric loader.
+	 */
+	protected abstract AbstractFabricLoader createLoader();
 
 	private static boolean emittedInfo = false;
 

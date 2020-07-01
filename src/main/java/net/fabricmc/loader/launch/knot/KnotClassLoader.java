@@ -17,6 +17,7 @@
 package net.fabricmc.loader.launch.knot;
 
 import net.fabricmc.api.EnvType;
+import net.fabricmc.loader.AbstractFabricLoader;
 import net.fabricmc.loader.game.GameProvider;
 
 import java.io.IOException;
@@ -43,15 +44,17 @@ class KnotClassLoader extends SecureClassLoader implements KnotClassLoaderInterf
 		}
 	}
 
+	private final AbstractFabricLoader loader;
 	private final DynamicURLClassLoader urlLoader;
 	private final ClassLoader originalLoader;
 	private final KnotClassDelegate delegate;
 
-	KnotClassLoader(boolean isDevelopment, EnvType envType, GameProvider provider) {
+	KnotClassLoader(AbstractFabricLoader loader, boolean isDevelopment, EnvType envType, GameProvider provider) {
 		super(new DynamicURLClassLoader(new URL[0]));
+		this.loader = loader;
 		this.originalLoader = getClass().getClassLoader();
 		this.urlLoader = (DynamicURLClassLoader) getParent();
-		this.delegate = new KnotClassDelegate(isDevelopment, envType, this, provider);
+		this.delegate = new KnotClassDelegate(loader, isDevelopment, envType, this, provider);
 	}
 
 	@Override

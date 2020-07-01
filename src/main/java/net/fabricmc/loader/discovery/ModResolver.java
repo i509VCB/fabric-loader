@@ -21,7 +21,7 @@ import com.google.common.jimfs.Jimfs;
 import com.google.common.jimfs.PathType;
 import com.google.gson.*;
 
-import net.fabricmc.loader.FabricLoader;
+import net.fabricmc.loader.AbstractFabricLoader;
 import net.fabricmc.loader.api.metadata.ModDependency;
 import net.fabricmc.loader.game.GameProvider.BuiltinMod;
 import net.fabricmc.loader.api.Version;
@@ -407,12 +407,12 @@ public class ModResolver {
 	}
 
 	static class UrlProcessAction extends RecursiveAction {
-		private final FabricLoader loader;
+		private final AbstractFabricLoader loader;
 		private final Map<String, ModCandidateSet> candidatesById;
 		private final URL url;
 		private final int depth;
 
-		UrlProcessAction(FabricLoader loader, Map<String, ModCandidateSet> candidatesById, URL url, int depth) {
+		UrlProcessAction(AbstractFabricLoader loader, Map<String, ModCandidateSet> candidatesById, URL url, int depth) {
 			this.loader = loader;
 			this.candidatesById = candidatesById;
 			this.url = url;
@@ -549,7 +549,7 @@ public class ModResolver {
 		}
 	}
 
-	public Map<String, ModCandidate> resolve(FabricLoader loader) throws ModResolutionException {
+	public Map<String, ModCandidate> resolve(AbstractFabricLoader loader) throws ModResolutionException {
 		ConcurrentMap<String, ModCandidateSet> candidatesById = new ConcurrentHashMap<>();
 
 		long time1 = System.currentTimeMillis();

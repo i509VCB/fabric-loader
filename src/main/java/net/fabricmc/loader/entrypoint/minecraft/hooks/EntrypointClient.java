@@ -18,7 +18,8 @@ package net.fabricmc.loader.entrypoint.minecraft.hooks;
 
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.ModInitializer;
-import net.fabricmc.loader.FabricLoader;
+import net.fabricmc.loader.AbstractFabricLoader;
+import net.fabricmc.loader.launch.common.FabricLauncherBase;
 
 import java.io.File;
 
@@ -28,7 +29,7 @@ public final class EntrypointClient {
 			runDir = new File(".");
 		}
 
-		FabricLoader.INSTANCE.prepareModInit(runDir, gameInstance);
+		FabricLauncherBase.getLauncher().getLoader().prepareModInit(runDir, gameInstance);
 		EntrypointUtils.invoke("main", ModInitializer.class, ModInitializer::onInitialize);
 		EntrypointUtils.invoke("client", ClientModInitializer.class, ClientModInitializer::onInitializeClient);
 	}

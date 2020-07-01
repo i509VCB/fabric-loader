@@ -16,7 +16,7 @@
 
 package net.fabricmc.loader.discovery;
 
-import net.fabricmc.loader.FabricLoader;
+import net.fabricmc.loader.AbstractFabricLoader;
 import net.fabricmc.loader.util.UrlConversionException;
 import net.fabricmc.loader.util.UrlUtil;
 
@@ -34,7 +34,7 @@ public class DirectoryModCandidateFinder implements ModCandidateFinder {
 	}
 
 	@Override
-	public void findCandidates(FabricLoader loader, Consumer<URL> urlProposer) {
+	public void findCandidates(AbstractFabricLoader loader, Consumer<URL> urlProposer) {
 		if (!Files.exists(path)) {
 			try {
 				Files.createDirectory(path);

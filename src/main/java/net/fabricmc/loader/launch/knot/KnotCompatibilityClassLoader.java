@@ -17,6 +17,7 @@
 package net.fabricmc.loader.launch.knot;
 
 import net.fabricmc.api.EnvType;
+import net.fabricmc.loader.AbstractFabricLoader;
 import net.fabricmc.loader.game.GameProvider;
 
 import java.io.IOException;
@@ -27,9 +28,9 @@ import java.net.URLClassLoader;
 class KnotCompatibilityClassLoader extends URLClassLoader implements KnotClassLoaderInterface {
 	private final KnotClassDelegate delegate;
 
-	KnotCompatibilityClassLoader(boolean isDevelopment, EnvType envType, GameProvider provider) {
+	KnotCompatibilityClassLoader(AbstractFabricLoader loader, boolean isDevelopment, EnvType envType, GameProvider provider) {
 		super(new URL[0], KnotCompatibilityClassLoader.class.getClassLoader());
-		this.delegate = new KnotClassDelegate(isDevelopment, envType, this, provider);
+		this.delegate = new KnotClassDelegate(loader, isDevelopment, envType, this, provider);
 	}
 
 	@Override

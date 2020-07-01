@@ -16,7 +16,7 @@
 
 package net.fabricmc.loader.discovery;
 
-import net.fabricmc.loader.FabricLoader;
+import net.fabricmc.loader.AbstractFabricLoader;
 import net.fabricmc.loader.launch.common.FabricLauncherBase;
 import net.fabricmc.loader.util.UrlConversionException;
 import net.fabricmc.loader.util.UrlUtil;
@@ -30,7 +30,7 @@ import java.util.stream.Stream;
 
 public class ClasspathModCandidateFinder implements ModCandidateFinder {
 	@Override
-	public void findCandidates(FabricLoader loader, Consumer<URL> appender) {
+	public void findCandidates(AbstractFabricLoader loader, Consumer<URL> appender) {
 		Stream<URL> urls;
 
 		if (FabricLauncherBase.getLauncher().isDevelopment()) {

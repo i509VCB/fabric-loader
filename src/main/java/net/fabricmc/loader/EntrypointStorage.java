@@ -16,8 +16,6 @@
 
 package net.fabricmc.loader;
 
-import net.fabricmc.loader.FabricLoader;
-import net.fabricmc.loader.ModContainer;
 import net.fabricmc.loader.api.EntrypointException;
 import net.fabricmc.loader.api.LanguageAdapter;
 import net.fabricmc.loader.api.LanguageAdapterException;
@@ -29,6 +27,12 @@ import net.fabricmc.loader.metadata.EntrypointMetadata;
 import java.util.*;
 
 class EntrypointStorage {
+	private final AbstractFabricLoader loader;
+
+	EntrypointStorage(AbstractFabricLoader loader) {
+		this.loader = loader;
+	}
+
 	interface Entry {
 		<T> T getOrCreate(Class<T> type) throws Exception;
 
@@ -122,7 +126,7 @@ class EntrypointStorage {
 	}
 
 	protected void addDeprecated(ModContainer modContainer, String adapter, String value) throws ClassNotFoundException, LanguageAdapterException {
-		FabricLoader.INSTANCE.getLogger().debug("Registering 0.3.x old-style initializer " + value + " for mod " + modContainer.getInfo().getId());
+		this.loader.getLogger().debug("Registering 0.3.x old-style initializer " + value + " for mod " + modContainer.getInfo().getId());
 		OldEntry oe = new OldEntry(modContainer, adapter, value);
 		getOrCreateEntries("main").add(oe);
 		getOrCreateEntries("client").add(oe);
@@ -134,7 +138,7 @@ class EntrypointStorage {
 			throw new Exception("Could not find adapter '" + metadata.getAdapter() + "' (mod " + modContainer.getInfo().getId() + "!)");
 		}
 
-		FabricLoader.INSTANCE.getLogger().debug("Registering new-style initializer " + metadata.getValue() + " for mod " + modContainer.getInfo().getId() + " (key " + key + ")");
+		this.loader.getLogger().debug("Registering new-style initializer " + metadata.getValue() + " for mod " + modContainer.getInfo().getId() + " (key " + key + ")");
 		getOrCreateEntries(key).add(new NewEntry(
 			modContainer, adapterMap.get(metadata.getAdapter()), metadata.getValue()
 		));
