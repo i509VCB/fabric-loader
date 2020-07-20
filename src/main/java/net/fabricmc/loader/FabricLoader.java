@@ -65,8 +65,8 @@ public class FabricLoader implements net.fabricmc.loader.api.FabricLoader {
 
 	protected static Logger LOGGER = LogManager.getFormatterLogger("Fabric|Loader");
 
-	protected final Map<String, ModContainer> modMap = new HashMap<>();
-	protected List<ModContainer> mods = new ArrayList<>();
+	protected final Map<String, LoaderModContainer> modMap = new HashMap<>();
+	protected List<LoaderModContainer> mods = new ArrayList<>();
 
 	private final Map<String, LanguageAdapter> adapterMap = new HashMap<>();
 	private final EntrypointStorage entrypointStorage = new EntrypointStorage();
@@ -203,8 +203,8 @@ public class FabricLoader implements net.fabricmc.loader.api.FabricLoader {
 	protected void finishModLoading() {
 		// add mods to classpath
 		// TODO: This can probably be made safer, but that's a long-term goal
-		for (ModContainer mod : mods) {
-			if (!mod.getInfo().getId().equals("fabricloader")) {
+		for (LoaderModContainer mod : mods) {
+			if (!mod.getMetadata().getId().equals("fabricloader")) {
 				FabricLauncherBase.getLauncher().propose(mod.getOriginUrl());
 			}
 		}
@@ -265,12 +265,12 @@ public class FabricLoader implements net.fabricmc.loader.api.FabricLoader {
 	 * @deprecated Use {@link net.fabricmc.loader.api.FabricLoader#getAllMods()}
 	 */
 	@Deprecated
-	public Collection<ModContainer> getModContainers() {
+	public Collection<LoaderModContainer> getModContainers() {
 		return Collections.unmodifiableList(mods);
 	}
 
 	@Deprecated
-	public List<ModContainer> getMods() {
+	public List<LoaderModContainer> getMods() {
 		return Collections.unmodifiableList(mods);
 	}
 
@@ -286,17 +286,17 @@ public class FabricLoader implements net.fabricmc.loader.api.FabricLoader {
 			return;
 		}
 
-		ModContainer container = new ModContainer(info, originUrl);
+		LoaderModContainer container = new LoaderModContainer(info, originUrl);
 		mods.add(container);
 		modMap.put(info.getId(), container);
 	}
 
 	protected void postprocessModMetadata() {
-		for (ModContainer mod : mods) {
-			if (!(mod.getInfo().getVersion() instanceof SemanticVersion)) {
-				LOGGER.warn("Mod `" + mod.getInfo().getId() + "` (" + mod.getInfo().getVersion().getFriendlyString() + ") does not respect SemVer - comparison support is limited.");
-			} else if (((SemanticVersion) mod.getInfo().getVersion()).getVersionComponentCount() >= 4) {
-				LOGGER.warn("Mod `" + mod.getInfo().getId() + "` (" + mod.getInfo().getVersion().getFriendlyString() + ") uses more dot-separated version components than SemVer allows; support for this is currently not guaranteed.");
+		for (AbstractModContainer mod : mods) {
+			if (!(mod.getMetadata().getVersion() instanceof SemanticVersion)) {
+				LOGGER.warn("Mod `" + mod.getMetadata().getId() + "` (" + mod.getMetadata().getVersion().getFriendlyString() + ") does not respect SemVer - comparison support is limited.");
+			} else if (((SemanticVersion) mod.getMetadata().getVersion()).getVersionComponentCount() >= 4) {
+				LOGGER.warn("Mod `" + mod.getMetadata().getId() + "` (" + mod.getMetadata().getVersion().getFriendlyString() + ") uses more dot-separated version components than SemVer allows; support for this is currently not guaranteed.");
 			}
 		}
 	}
@@ -336,9 +336,9 @@ public class FabricLoader implements net.fabricmc.loader.api.FabricLoader {
 	private void setupLanguageAdapters() {
 		adapterMap.put("default", DefaultLanguageAdapter.INSTANCE);
 
-		for (ModContainer mod : mods) {
+		for (AbstractModContainer mod : mods) {
 			// add language adapters
-			for (Map.Entry<String, String> laEntry : mod.getInfo().getLanguageAdapterDefinitions().entrySet()) {
+			for (Map.Entry<String, String> laEntry : mod.getMetadata().getLanguageAdapterDefinitions().entrySet()) {
 				if (adapterMap.containsKey(laEntry.getKey())) {
 					throw new RuntimeException("Duplicate language adapter key: " + laEntry.getKey() + "! (" + laEntry.getValue() + ", " + adapterMap.get(laEntry.getKey()).getClass().getName() + ")");
 				}
@@ -353,22 +353,27 @@ public class FabricLoader implements net.fabricmc.loader.api.FabricLoader {
 	}
 
 	private void setupMods() {
-		for (ModContainer mod : mods) {
+		for (LoaderModContainer mod : mods) {
 			try {
 				mod.setupRootPath();
 
-				for (String in : mod.getInfo().getOldInitializers()) {
-					String adapter = mod.getInfo().getOldStyleLanguageAdapter();
-					entrypointStorage.addDeprecated(mod, adapter, in);
-				}
-
-				for (String key : mod.getInfo().getEntrypointKeys()) {
-					for (EntrypointMetadata in : mod.getInfo().getEntrypoints(key)) {
-						entrypointStorage.add(mod, key, in, adapterMap);
-					}
-				}
+				setupEntrypoints(mod);
 			} catch (Exception e) {
-				throw new RuntimeException(String.format("Failed to setup mod %s (%s)", mod.getInfo().getName(), mod.getOriginUrl().getFile()), e);
+				// TODO: Abstract origin url
+				throw new RuntimeException(String.format("Failed to setup mod %s (%s)", mod.getMetadata().getName(), mod.getOriginUrl().getFile()), e);
+			}
+		}
+	}
+
+	private void setupEntrypoints(AbstractModContainer mod) throws Exception {
+		for (String in : mod.getMetadata().getOldInitializers()) {
+			String adapter = mod.getMetadata().getOldStyleLanguageAdapter();
+			entrypointStorage.addDeprecated(mod, adapter, in);
+		}
+
+		for (String key : mod.getMetadata().getEntrypointKeys()) {
+			for (EntrypointMetadata in : mod.getMetadata().getEntrypoints(key)) {
+				entrypointStorage.add(mod, key, in, adapterMap);
 			}
 		}
 	}

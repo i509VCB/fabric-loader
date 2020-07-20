@@ -16,8 +16,6 @@
 
 package net.fabricmc.loader;
 
-import net.fabricmc.loader.FabricLoader;
-import net.fabricmc.loader.ModContainer;
 import net.fabricmc.loader.api.EntrypointException;
 import net.fabricmc.loader.api.LanguageAdapter;
 import net.fabricmc.loader.api.LanguageAdapterException;
@@ -32,7 +30,7 @@ class EntrypointStorage {
 	interface Entry {
 		<T> T getOrCreate(Class<T> type) throws Exception;
 
-		ModContainer getModContainer();
+		AbstractModContainer getModContainer();
 	}
 
 	private static class OldEntry implements Entry {
@@ -40,12 +38,12 @@ class EntrypointStorage {
 			.missingSuperclassBehaviour(net.fabricmc.loader.language.LanguageAdapter.MissingSuperclassBehavior.RETURN_NULL)
 			.build();
 
-		private final ModContainer mod;
+		private final AbstractModContainer mod;
 		private final String languageAdapter;
 		private final String value;
 		private Object object;
 
-		private OldEntry(ModContainer mod, String languageAdapter, String value) {
+		private OldEntry(AbstractModContainer mod, String languageAdapter, String value) {
 			this.mod = mod;
 			this.languageAdapter = languageAdapter;
 			this.value = value;
@@ -53,7 +51,7 @@ class EntrypointStorage {
 
 		@Override
 		public String toString() {
-			return mod.getInfo().getId() + "->" + value;
+			return mod.getMetadata().getId() + "->" + value;
 		}
 
 		@Override
@@ -72,18 +70,18 @@ class EntrypointStorage {
 		}
 
 		@Override
-		public ModContainer getModContainer() {
+		public AbstractModContainer getModContainer() {
 			return mod;
 		}
 	}
 
 	private static class NewEntry implements Entry {
-		private final ModContainer mod;
+		private final AbstractModContainer mod;
 		private final LanguageAdapter adapter;
 		private final String value;
 		private final Map<Class<?>, Object> instanceMap = new IdentityHashMap<>();
 
-		private NewEntry(ModContainer mod, LanguageAdapter adapter, String value) {
+		private NewEntry(AbstractModContainer mod, LanguageAdapter adapter, String value) {
 			this.mod = mod;
 			this.adapter = adapter;
 			this.value = value;
@@ -91,7 +89,7 @@ class EntrypointStorage {
 
 		@Override
 		public String toString() {
-			return mod.getInfo().getId() + "->(0.3.x)" + value;
+			return mod.getMetadata().getId() + "->(0.3.x)" + value;
 		}
 
 		@Override
@@ -106,7 +104,7 @@ class EntrypointStorage {
 		}
 
 		@Override
-		public ModContainer getModContainer() {
+		public AbstractModContainer getModContainer() {
 			return mod;
 		}
 
@@ -121,20 +119,20 @@ class EntrypointStorage {
 		return entryMap.computeIfAbsent(key, (z) -> new ArrayList<>());
 	}
 
-	protected void addDeprecated(ModContainer modContainer, String adapter, String value) throws ClassNotFoundException, LanguageAdapterException {
-		FabricLoader.INSTANCE.getLogger().debug("Registering 0.3.x old-style initializer " + value + " for mod " + modContainer.getInfo().getId());
+	protected void addDeprecated(AbstractModContainer modContainer, String adapter, String value) throws ClassNotFoundException, LanguageAdapterException {
+		FabricLoader.INSTANCE.getLogger().debug("Registering 0.3.x old-style initializer " + value + " for mod " + modContainer.getMetadata().getId());
 		OldEntry oe = new OldEntry(modContainer, adapter, value);
 		getOrCreateEntries("main").add(oe);
 		getOrCreateEntries("client").add(oe);
 		getOrCreateEntries("server").add(oe);
 	}
 
-	protected void add(ModContainer modContainer, String key, EntrypointMetadata metadata, Map<String, LanguageAdapter> adapterMap) throws Exception {
+	protected void add(AbstractModContainer modContainer, String key, EntrypointMetadata metadata, Map<String, LanguageAdapter> adapterMap) throws Exception {
 		if (!adapterMap.containsKey(metadata.getAdapter())) {
-			throw new Exception("Could not find adapter '" + metadata.getAdapter() + "' (mod " + modContainer.getInfo().getId() + "!)");
+			throw new Exception("Could not find adapter '" + metadata.getAdapter() + "' (mod " + modContainer.getMetadata().getId() + "!)");
 		}
 
-		FabricLoader.INSTANCE.getLogger().debug("Registering new-style initializer " + metadata.getValue() + " for mod " + modContainer.getInfo().getId() + " (key " + key + ")");
+		FabricLoader.INSTANCE.getLogger().debug("Registering new-style initializer " + metadata.getValue() + " for mod " + modContainer.getMetadata().getId() + " (key " + key + ")");
 		getOrCreateEntries(key).add(new NewEntry(
 			modContainer, adapterMap.get(metadata.getAdapter()), metadata.getValue()
 		));

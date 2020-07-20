@@ -16,14 +16,15 @@
 
 package net.fabricmc.loader.entrypoint;
 
-import net.fabricmc.loader.ModContainer;
+import net.fabricmc.loader.AbstractModContainer;
+import net.fabricmc.loader.LoaderModContainer;
 import net.fabricmc.loader.api.entrypoint.EntrypointContainer;
 
 public class EntrypointContainerImpl<T> implements EntrypointContainer<T> {
-	private final ModContainer container;
+	private final AbstractModContainer container;
 	private final T entrypoint;
 
-	public EntrypointContainerImpl(ModContainer container, T entrypoint) {
+	public EntrypointContainerImpl(AbstractModContainer container, T entrypoint) {
 		this.container = container;
 		this.entrypoint = entrypoint;
 	}
@@ -34,7 +35,7 @@ public class EntrypointContainerImpl<T> implements EntrypointContainer<T> {
 	}
 
 	@Override
-	public ModContainer getProvider() {
+	public AbstractModContainer getProvider() {
 		return container;
 	}
 }

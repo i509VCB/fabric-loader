@@ -16,7 +16,6 @@
 
 package net.fabricmc.loader;
 
-import net.fabricmc.loader.api.metadata.ModMetadata;
 import net.fabricmc.loader.metadata.LoaderModMetadata;
 import net.fabricmc.loader.util.FileSystemUtil;
 import net.fabricmc.loader.util.UrlConversionException;
@@ -27,13 +26,12 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-public class ModContainer implements net.fabricmc.loader.api.ModContainer {
-	private final LoaderModMetadata info;
+public class LoaderModContainer extends AbstractModContainer {
 	private final URL originUrl;
 	private Path root;
 
-	public ModContainer(LoaderModMetadata info, URL originUrl) {
-		this.info = info;
+	public LoaderModContainer(LoaderModMetadata info, URL originUrl) {
+		super(info);
 		this.originUrl = originUrl;
 	}
 
@@ -57,13 +55,8 @@ public class ModContainer implements net.fabricmc.loader.api.ModContainer {
 				// We never close here. It's fine. getJarFileSystem() will handle it gracefully, and so should mods
 			}
 		} catch (IOException | UrlConversionException e) {
-			throw new RuntimeException("Failed to find root directory for mod '" + info.getId() + "'!", e);
+			throw new RuntimeException("Failed to find root directory for mod '" + this.getMetadata().getId() + "'!", e);
 		}
-	}
-
-	@Override
-	public ModMetadata getMetadata() {
-		return info;
 	}
 
 	@Override
@@ -72,10 +65,6 @@ public class ModContainer implements net.fabricmc.loader.api.ModContainer {
 			throw new RuntimeException("Accessed mod root before primary loader!");
 		}
 		return root;
-	}
-
-	public LoaderModMetadata getInfo() {
-		return info;
 	}
 
 	public URL getOriginUrl() {
