@@ -16,17 +16,26 @@
 
 package net.fabricmc.loader.metadata;
 
-import net.fabricmc.loader.api.metadata.CustomValue;
-import net.fabricmc.loader.api.metadata.ModMetadata;
+import net.fabricmc.loader.api.metadata.ContactInformation;
+import net.fabricmc.loader.api.metadata.Person;
 
-public abstract class AbstractModMetadata implements ModMetadata {
-	@Override
-	public boolean containsCustomValue(String key) {
-		return getCustomValues().containsKey(key);
+/**
+ * Represents a simple implementation of person which is only identified by name.
+ */
+class SimplePerson implements Person {
+	private final String name;
+
+	SimplePerson(String name) {
+		this.name = name;
 	}
 
 	@Override
-	public CustomValue getCustomValue(String key) {
-		return getCustomValues().get(key);
+	public String getName() {
+		return this.name;
+	}
+
+	@Override
+	public ContactInformation getContact() {
+		return ContactInformation.EMPTY;
 	}
 }

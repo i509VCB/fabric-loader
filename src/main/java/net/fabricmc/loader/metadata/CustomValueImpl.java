@@ -18,6 +18,7 @@ package net.fabricmc.loader.metadata;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -30,6 +31,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import com.grack.nanojson.JsonParserException;
+import com.grack.nanojson.JsonReader;
 
 import net.fabricmc.loader.api.metadata.CustomValue;
 
@@ -73,6 +76,46 @@ abstract class CustomValueImpl implements CustomValue {
 			return NULL;
 		} else {
 			throw new IllegalArgumentException(Objects.toString(e));
+		}
+	}
+
+	public static CustomValue readCustomValue(JsonReader reader) throws JsonParserException {
+		switch (reader.current()) {
+		case OBJECT:
+			reader.object();
+
+			final Map<String, CustomValue> values = new HashMap<>();
+
+			while (reader.next()) {
+				values.put(reader.key(), CustomValueImpl.readCustomValue(reader));
+			}
+
+			return new ObjectImpl(values);
+		case ARRAY:
+			reader.array();
+
+			final List<CustomValue> entries = new ArrayList<>();
+
+			while (reader.next()) {
+				entries.add(CustomValueImpl.readCustomValue(reader));
+			}
+
+			return new ArrayImpl(entries);
+		case STRING:
+			return new StringImpl(reader.string());
+		case NUMBER:
+			return new NumberImpl(reader.number());
+		case BOOLEAN:
+			if (reader.bool()) {
+				return CustomValueImpl.BOOLEAN_TRUE;
+			}
+
+			return CustomValueImpl.BOOLEAN_FALSE;
+		case NULL:
+			return CustomValueImpl.NULL;
+		default:
+			// TODO: Fail
+			throw new RuntimeException("uhhj");
 		}
 	}
 

@@ -145,6 +145,7 @@ public interface ModMetadata {
 	 * @param key the key
 	 * @return the custom value, or {@code null} if no such value is present
 	 */
+	/* @Nullable */
 	CustomValue getCustomValue(String key);
 
 	/**
@@ -155,16 +156,4 @@ public interface ModMetadata {
 	 * @return a map containing the custom values this mod defines.
 	 */
 	Map<String, CustomValue> getCustomValues();
-
-	/**
-	 * @deprecated Use {@link #containsCustomValue} instead, this will be removed (can't expose GSON types)!
-	 */
-	@Deprecated
-	boolean containsCustomElement(String key);
-
-	/**
-	 * @deprecated Use {@link #getCustomValue} instead, this will be removed (can't expose GSON types)!
-	 */
-	@Deprecated
-	JsonElement getCustomElement(String key);
 }

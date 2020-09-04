@@ -16,17 +16,18 @@
 
 package net.fabricmc.loader.metadata;
 
-import net.fabricmc.loader.api.metadata.CustomValue;
-import net.fabricmc.loader.api.metadata.ModMetadata;
-
-public abstract class AbstractModMetadata implements ModMetadata {
-	@Override
-	public boolean containsCustomValue(String key) {
-		return getCustomValues().containsKey(key);
+public class ParseMetadataException extends Exception {
+	public ParseMetadataException(String message) {
+		super(message);
 	}
 
-	@Override
-	public CustomValue getCustomValue(String key) {
-		return getCustomValues().get(key);
+	public ParseMetadataException(String message, Throwable throwable) {
+		super(message, throwable);
+	}
+
+	public static class MissingRequired extends ParseMetadataException {
+		public MissingRequired(String field) {
+			super(String.format("Missing required field \"%s\".", field));
+		}
 	}
 }

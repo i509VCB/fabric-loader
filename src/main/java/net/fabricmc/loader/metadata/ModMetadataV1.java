@@ -54,6 +54,10 @@ public class ModMetadataV1 extends AbstractModMetadata implements LoaderModMetad
 	private DependencyContainer conflicts = new DependencyContainer();
 	private DependencyContainer breaks = new DependencyContainer();
 
+	// Happy little accidents
+	@Deprecated
+	private DependencyContainer requires = new DependencyContainer();
+
 	// Optional (metadata)
 	private String name;
 	private String description = "";
@@ -68,10 +72,6 @@ public class ModMetadataV1 extends AbstractModMetadata implements LoaderModMetad
 
 	// Optional (custom)
 	private CustomValueContainer custom = new CustomValueContainer();
-
-	// Happy little accidents
-	@Deprecated
-	private DependencyContainer requires = new DependencyContainer();
 
 	@Override
 	public String getType() {

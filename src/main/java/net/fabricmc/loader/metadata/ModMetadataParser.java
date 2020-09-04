@@ -25,6 +25,7 @@ import net.fabricmc.loader.util.version.VersionDeserializer;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
+@Deprecated
 public class ModMetadataParser {
 	public static final int LATEST_VERSION = 1;
 
