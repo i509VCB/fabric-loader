@@ -41,6 +41,7 @@ abstract class CustomValueImpl implements CustomValue {
 	static final CustomValue BOOLEAN_FALSE = new BooleanImpl(false);
 	static final CustomValue NULL = new NullImpl();
 
+	@Deprecated
 	public static CustomValue fromJsonElement(JsonElement e) {
 		if (e instanceof JsonObject) {
 			JsonObject o = (JsonObject) e;
@@ -79,7 +80,7 @@ abstract class CustomValueImpl implements CustomValue {
 		}
 	}
 
-	public static CustomValue readCustomValue(JsonReader reader) throws JsonParserException {
+	public static CustomValue readCustomValue(JsonReader reader) throws JsonParserException, ParseMetadataException {
 		switch (reader.current()) {
 		case OBJECT:
 			reader.object();
@@ -114,8 +115,7 @@ abstract class CustomValueImpl implements CustomValue {
 		case NULL:
 			return CustomValueImpl.NULL;
 		default:
-			// TODO: Fail
-			throw new RuntimeException("uhhj");
+			throw new ParseMetadataException(Objects.toString(reader.value()));
 		}
 	}
 

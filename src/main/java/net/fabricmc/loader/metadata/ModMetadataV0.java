@@ -33,6 +33,7 @@ import java.util.regex.Pattern;
 /**
  * Definition class for "fabric.mod.json" files.
  */
+@Deprecated
 public class ModMetadataV0 extends AbstractModMetadata implements LoaderModMetadata {
 	// Required
 	private String id;

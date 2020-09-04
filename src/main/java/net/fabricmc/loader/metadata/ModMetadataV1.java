@@ -35,6 +35,7 @@ import java.util.stream.Collectors;
 /**
  * Definition class for "fabric.mod.json" files.
  */
+@Deprecated
 public class ModMetadataV1 extends AbstractModMetadata implements LoaderModMetadata {
 	// Required
 	private String id;
