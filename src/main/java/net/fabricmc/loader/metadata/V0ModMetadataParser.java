@@ -21,11 +21,14 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.grack.nanojson.JsonParserException;
 import com.grack.nanojson.JsonReader;
@@ -39,6 +42,9 @@ import net.fabricmc.loader.api.metadata.Person;
 import net.fabricmc.loader.util.version.VersionDeserializer;
 
 final class V0ModMetadataParser {
+	private static final Pattern WEBSITE_PATTERN = Pattern.compile("\\((.+)\\)");
+	private static final Pattern EMAIL_PATTERN = Pattern.compile("<(.+)>");
+
 	public static LoaderModMetadata parse(Path modJson) throws JsonParserException, IOException, ParseMetadataException {
 		try (final InputStream stream = Files.newInputStream(modJson)) {
 			final JsonReader reader = JsonReader.from(stream);
@@ -160,10 +166,10 @@ final class V0ModMetadataParser {
 					V0ModMetadataParser.readDependenciesContainer(reader, recommends);
 					break;
 				case "authors":
-					// TODO
+					V0ModMetadataParser.readPeople(reader, authors);
 					break;
 				case "contributors":
-					// TODO
+					V0ModMetadataParser.readPeople(reader, contributors);
 					break;
 				case "links":
 					// TODO
@@ -250,7 +256,79 @@ final class V0ModMetadataParser {
 		}
 	}
 
-	private static void readDependenciesContainer(JsonReader reader, Map<String, ModDependency> dependencies) {
-		// TODO
+	private static void readDependenciesContainer(JsonReader reader, Map<String, ModDependency> dependencies) throws JsonParserException {
+	}
+
+	private static void readPeople(JsonReader reader, List<Person> people) throws JsonParserException, ParseMetadataException {
+		if (reader.current() != JsonReader.Type.ARRAY) {
+			throw new ParseMetadataException("List of people must be an array");
+		}
+
+		reader.array();
+
+		while (reader.next()) {
+			people.add(V0ModMetadataParser.readPerson(reader));
+		}
+	}
+
+	private static Person readPerson(JsonReader reader) throws JsonParserException {
+		final HashMap<String, String> contactMap = new HashMap<>();
+		String name = "";
+
+		switch (reader.current()) {
+		case STRING:
+			final String person = reader.string();
+			String[] parts = person.split(" ");
+
+			Matcher websiteMatcher = V0ModMetadataParser.WEBSITE_PATTERN.matcher(parts[parts.length - 1]);
+
+			if (websiteMatcher.matches()) {
+				contactMap.put("website", websiteMatcher.group(1));
+				parts = Arrays.copyOf(parts, parts.length - 1);
+			}
+
+			Matcher emailMatcher = V0ModMetadataParser.EMAIL_PATTERN.matcher(parts[parts.length - 1]);
+
+			if (emailMatcher.matches()) {
+				contactMap.put("email", emailMatcher.group(1));
+				parts = Arrays.copyOf(parts, parts.length - 1);
+			}
+
+			name = String.join(" ", parts);
+
+			return new ContactInfoBackedPerson(name, new MapBackedContactInformation(contactMap));
+		case OBJECT:
+			reader.object();
+
+			while (reader.next()) {
+				switch (reader.key()) {
+				case "name":
+					if (reader.current() != JsonReader.Type.STRING) {
+						break;
+					}
+
+					name = reader.string();
+					break;
+				case "email":
+					if (reader.current() != JsonReader.Type.STRING) {
+						break;
+					}
+
+					contactMap.put("email", reader.string());
+					break;
+				case "website":
+					if (reader.current() != JsonReader.Type.STRING) {
+						break;
+					}
+
+					contactMap.put("website", reader.string());
+					break;
+				}
+			}
+
+			return new ContactInfoBackedPerson(name, new MapBackedContactInformation(contactMap));
+		default:
+			throw new RuntimeException("Expected person to be a string or object");
+		}
 	}
 }
