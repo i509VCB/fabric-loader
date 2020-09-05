@@ -34,6 +34,7 @@ import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
+import net.fabricmc.loader.metadata.ParseMetadataException;
 import net.fabricmc.loader.util.FileSystemUtil;
 import net.fabricmc.loader.util.version.SemanticVersionImpl;
 import net.fabricmc.loader.util.version.SemanticVersionPredicateParser;
@@ -122,9 +123,30 @@ public final class McVersionLookup {
 
 			while (reader.next()) {
 				switch (reader.key()) {
-				case "id": id = reader.string(); break;
-				case "name": name = reader.string(); break;
-				case "release_target": release = reader.string(); break;
+				case "id":
+					if (reader.current() != JsonReader.Type.STRING) {
+						// FIXME: Needs it's own type?
+						throw new ParseMetadataException("id in version json must be a string");
+					}
+
+					id = reader.string();
+					break;
+				case "name":
+					if (reader.current() != JsonReader.Type.STRING) {
+						// FIXME: Needs it's own type?
+						throw new ParseMetadataException("\"name\" in version json must be a string");
+					}
+
+					name = reader.string();
+					break;
+				case "release_target":
+					if (reader.current() != JsonReader.Type.STRING) {
+						// FIXME: Needs it's own type?
+						throw new ParseMetadataException("\"release_target\" in version json must be a string");
+					}
+
+					release = reader.string();
+					break;
 				default:
 				}
 			}
@@ -136,7 +158,7 @@ public final class McVersionLookup {
 			}
 
 			if (name != null && release != null) return new McVersion(name, release);
-		} catch (JsonParserException e) {
+		} catch (JsonParserException | ParseMetadataException e) {
 			e.printStackTrace();
 		}
 
