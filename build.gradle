@@ -5,7 +5,7 @@ import com.google.gson.JsonObject
 plugins {
 	id 'java'
 	id 'maven-publish'
-	id 'com.github.johnrengelman.shadow' version '6.0.0'
+	// TODO: Shadow plugin
 
 	id 'idea'
 	id 'eclipse'
@@ -74,7 +74,7 @@ dependencies {
 	compile 'net.sf.jopt-simple:jopt-simple:5.0.3'
 
 	// Unit testing
-	testCompile('org.junit.jupiter:junit-jupiter:5.6.2')
+	testImplementation('org.junit.jupiter:junit-jupiter:5.6.2')
 }
 
 test {
