@@ -65,7 +65,6 @@ final class V0ModMetadataParser {
 
 		while (reader.next()) {
 			switch (reader.key()) {
-			// TODO: Handle scenario where second schemaVersion field is present and does not match
 			case "schemaVersion":
 				// Duplicate field, make sure it matches our current schema version
 				if (reader.current() != JsonReader.Type.NUMBER) {

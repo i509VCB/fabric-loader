@@ -53,7 +53,7 @@ public final class ModMetadataParser {
 
 			reader.object();
 
-			// This is our second read
+			// This s second read, assume the best with schemaVersion we have been provided.
 			if (schemaVersion != null) {
 				return ModMetadataParser.readModMetadata(reader, schemaVersion);
 			}
@@ -72,32 +72,18 @@ public final class ModMetadataParser {
 						return ModMetadataParser.readModMetadata(reader, reader.intVal());
 					}
 
-					// schemaVersion is not the first field; we have found it's value though
-					if (schemaVersion != null) {
-						// Possible duplicate version
-						final int read = reader.intVal();
-
-						if (schemaVersion != read) {
-							throw new ParseMetadataException(String.format("Found duplicate \"schemaVersion\" field with different value. First read value was \"%s\" and the duplicate value was \"%s\".", schemaVersion, read));
-						}
-
-						schemaVersion = read;
-					} else {
-						schemaVersion = reader.intVal();
-					}
+					// We found the value of the `schemaVersion`.
+					// Do re-read to parse will full certainty
+					return ModMetadataParser.parseMetadata(modJson, reader.intVal());
 				}
 
 				firstField = false;
 			}
 		}
 
-		// No schema version was present, assume version 0
-		if (schemaVersion == null) {
-			schemaVersion = 0;
-		}
-
-		// Try reading the json file again with schemaVersion for context
-		return ModMetadataParser.parseMetadata(modJson, schemaVersion);
+		// No schema version was present.
+		// Try reading the json file again assuming version 0.
+		return ModMetadataParser.parseMetadata(modJson, 0);
 	}
 
 	private static LoaderModMetadata readModMetadata(JsonReader reader, int schemaVersion) throws JsonParserException, ParseMetadataException {
@@ -105,10 +91,9 @@ public final class ModMetadataParser {
 		case 1:
 			return V1ModMetadataParser.parse(reader);
 		case 0:
-			// TODO: Warn about v0 being deprecated when we have full object at the end of parse method
 			return V0ModMetadataParser.parse(reader);
 		default:
-			throw new ParseMetadataException(String.format("Invalid schema version \"%s\" was found", schemaVersion));
+			throw new ParseMetadataException(String.format("Invalid/Unsupported schema version \"%s\" was found", schemaVersion));
 		}
 	}
 
