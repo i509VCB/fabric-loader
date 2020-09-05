@@ -310,58 +310,6 @@ final class NewV1ModMetadata extends AbstractModMetadata implements LoaderModMet
 		}
 	}
 
-	static final class V1ModDependency implements ModDependency {
-		private final String modId;
-		private final List<String> matcherStringList;
-		private final String depAsStr;
-
-		V1ModDependency(String modId, List<String> matcherStringList) {
-			this.modId = modId;
-			this.matcherStringList = matcherStringList;
-
-			final StringBuilder builder = new StringBuilder("{");
-			builder.append(this.modId);
-			builder.append(" @ [");
-
-			for (int i = 0; i < matcherStringList.size(); i++) {
-				if (i > 0) {
-					builder.append(" || ");
-				}
-
-				builder.append(matcherStringList.get(i));
-			}
-
-			builder.append("]}");
-			this.depAsStr = builder.toString();
-		}
-
-		@Override
-		public String getModId() {
-			return this.modId;
-		}
-
-		@Override
-		public boolean matches(Version version) {
-			for (String s : this.matcherStringList) {
-				try {
-					if (VersionPredicateParser.matches(version, s)) {
-						return true;
-					}
-				} catch (VersionParsingException e) {
-					e.printStackTrace();
-					return false;
-				}
-			}
-
-			return false;
-		}
-
-		@Override
-		public String toString() {
-			return this.depAsStr;
-		}
-	}
-
 	interface IconEntry {
 		Optional<String> getIconPath(int size);
 	}

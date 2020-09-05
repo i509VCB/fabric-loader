@@ -400,7 +400,7 @@ final class V1ModMetadataParser {
 				throw new ParseMetadataException("Dependency version range must be a string or string array!");
 			}
 
-			modDependencies.put(modId, new NewV1ModMetadata.V1ModDependency(modId, matcherStringList));
+			modDependencies.put(modId, new ModDependencyImpl(modId, matcherStringList));
 		}
 	}
 

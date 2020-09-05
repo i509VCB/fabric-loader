@@ -98,10 +98,10 @@ final class V0ModMetadataParser {
 
 					break;
 				case "requires":
-					V0ModMetadataParser.readDependenciesContainer(reader, requires);
+					V0ModMetadataParser.readDependenciesContainer(reader, requires, "requires");
 					break;
 				case "conflicts":
-					V0ModMetadataParser.readDependenciesContainer(reader, conflicts);
+					V0ModMetadataParser.readDependenciesContainer(reader, conflicts, "conflicts");
 					break;
 				case "mixins":
 					mixins = V0ModMetadataParser.readMixins(reader);
@@ -162,7 +162,7 @@ final class V0ModMetadataParser {
 					description = reader.string();
 					break;
 				case "recommends":
-					V0ModMetadataParser.readDependenciesContainer(reader, recommends);
+					V0ModMetadataParser.readDependenciesContainer(reader, recommends, "recommends");
 					break;
 				case "authors":
 					V0ModMetadataParser.readPeople(reader, authors);
@@ -192,7 +192,7 @@ final class V0ModMetadataParser {
 				throw new ParseMetadataException.MissingRequired("version");
 			}
 
-			// Optional stuf
+			// Optional stuff
 			if (links == null) {
 				links = ContactInformation.EMPTY;
 			}
@@ -304,7 +304,39 @@ final class V0ModMetadataParser {
 		}
 	}
 
-	private static void readDependenciesContainer(JsonReader reader, Map<String, ModDependency> dependencies) throws JsonParserException {
+	private static void readDependenciesContainer(JsonReader reader, Map<String, ModDependency> dependencies, String name) throws JsonParserException, ParseMetadataException {
+		if (reader.current() != JsonReader.Type.OBJECT) {
+			throw new ParseMetadataException(String.format("%s must be an object containing dependencies.", name));
+		}
+
+		reader.object();
+
+		while (reader.next()) {
+			final String modId = reader.key();
+			final List<String> versionMatchers = new ArrayList<>();
+
+			switch (reader.current()) {
+			case STRING:
+				versionMatchers.add(reader.string());
+				break;
+			case ARRAY:
+				reader.array();
+
+				while (reader.next()) {
+					if (reader.current() != JsonReader.Type.STRING) {
+						throw new ParseMetadataException("List of version requirements must be strings");
+					}
+
+					versionMatchers.add(reader.string());
+				}
+
+				break;
+			default:
+				throw new ParseMetadataException("Expected version to be a string or array");
+			}
+
+			dependencies.put(modId, new ModDependencyImpl(modId, versionMatchers));
+		}
 	}
 
 	private static void readPeople(JsonReader reader, List<Person> people) throws JsonParserException, ParseMetadataException {
