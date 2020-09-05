@@ -72,7 +72,7 @@ public final class ModMetadataParser {
 						return ModMetadataParser.readModMetadata(reader, reader.intVal());
 					}
 
-					// schemaVersion is not the first field but we have found it
+					// schemaVersion is not the first field; we have found it's value though
 					if (schemaVersion != null) {
 						// Possible duplicate version
 						final int read = reader.intVal();

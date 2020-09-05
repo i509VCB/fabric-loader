@@ -66,6 +66,19 @@ final class V0ModMetadataParser {
 		while (reader.next()) {
 			switch (reader.key()) {
 			// TODO: Handle scenario where second schemaVersion field is present and does not match
+			case "schemaVersion":
+				// Duplicate field, make sure it matches our current schema version
+				if (reader.current() != JsonReader.Type.NUMBER) {
+					throw new ParseMetadataException("Duplicate \"schemaVersion\" field is not a number");
+				}
+
+				final int read = reader.intVal();
+
+				if (read != 0) {
+					throw new ParseMetadataException(String.format("Duplicate \"schemaVersion\" field does not match the predicted schema version of 0. Duplicate field value is %s", read));
+				}
+
+				break;
 			case "id":
 				if (reader.current() != JsonReader.Type.STRING) {
 					throw new ParseMetadataException("Mod id must be a non-empty string with a length of 3-64 characters.");
