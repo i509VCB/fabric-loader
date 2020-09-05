@@ -44,7 +44,7 @@ final class V0ModMetadata extends AbstractModMetadata implements LoaderModMetada
 	private final Map<String, ModDependency> conflicts;
 	private final String languageAdapter = "net.fabricmc.loader.language.JavaLanguageAdapter"; // TODO: Constants class?
 	private final Mixins mixins;
-	private final ModEnvironment environment; // REMOVEME: Replacing Side in old metadata with this
+	private final ModEnvironment side;
 	private final String initializer;
 	private final Collection<String> initializers;
 
@@ -57,7 +57,7 @@ final class V0ModMetadata extends AbstractModMetadata implements LoaderModMetada
 	private final ContactInformation links;
 	private final String license;
 
-	V0ModMetadata(String id, Version version, Map<String, ModDependency> requires, Map<String, ModDependency> conflicts, Mixins mixins, ModEnvironment environment, String initializer, Collection<String> initializers, String name, String description, Map<String, ModDependency> recommends, Collection<Person> authors, Collection<Person> contributors, ContactInformation links, String license) {
+	V0ModMetadata(String id, Version version, Map<String, ModDependency> requires, Map<String, ModDependency> conflicts, Mixins mixins, ModEnvironment side, String initializer, Collection<String> initializers, String name, String description, Map<String, ModDependency> recommends, Collection<Person> authors, Collection<Person> contributors, ContactInformation links, String license) {
 		this.id = id;
 		this.version = version;
 		this.requires = Collections.unmodifiableMap(requires);
@@ -69,7 +69,7 @@ final class V0ModMetadata extends AbstractModMetadata implements LoaderModMetada
 			this.mixins = mixins;
 		}
 
-		this.environment = environment;
+		this.side = side;
 		this.initializer = initializer;
 		this.initializers = Collections.unmodifiableCollection(initializers);
 		this.name = name;
@@ -109,12 +109,12 @@ final class V0ModMetadata extends AbstractModMetadata implements LoaderModMetada
 
 	@Override
 	public ModEnvironment getEnvironment() {
-		return this.environment;
+		return this.side;
 	}
 
 	@Override
 	public boolean loadsInEnvironment(EnvType type) {
-		return this.environment.matches(type);
+		return this.side.matches(type);
 	}
 
 	@Override

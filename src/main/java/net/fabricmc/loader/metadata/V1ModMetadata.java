@@ -89,6 +89,7 @@ final class V1ModMetadata extends AbstractModMetadata implements LoaderModMetada
 		this.suggests = Collections.unmodifiableMap(suggests);
 		this.conflicts = Collections.unmodifiableMap(conflicts);
 		this.breaks = Collections.unmodifiableMap(breaks);
+		// Deprecated
 		this.requires = Collections.unmodifiableMap(requires);
 		this.name = name;
 		this.description = description;

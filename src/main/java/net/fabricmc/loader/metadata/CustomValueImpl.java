@@ -24,11 +24,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Map.Entry;
+import java.util.function.Consumer;
 
 import com.grack.nanojson.JsonParserException;
 import com.grack.nanojson.JsonReader;
 
 import net.fabricmc.loader.api.metadata.CustomValue;
+import net.fabricmc.loader.util.JsonVisitors;
 
 abstract class CustomValueImpl implements CustomValue {
 	static final CustomValue BOOLEAN_TRUE = new BooleanImpl(true);
@@ -223,6 +225,84 @@ abstract class CustomValueImpl implements CustomValue {
 		@Override
 		public CvType getType() {
 			return CvType.NULL;
+		}
+	}
+
+	static final class CustomValueObjectVisitor implements JsonVisitors.ObjectVisitor {
+		private final Map<String, CustomValue> values = new HashMap<>();
+		private final Consumer<Map<String, CustomValue>> applyCallback;
+
+		CustomValueObjectVisitor() {
+			this(null);
+		}
+
+		CustomValueObjectVisitor(Consumer<Map<String, CustomValue>> applyCallback) {
+			this.applyCallback = applyCallback;
+		}
+
+		@Override
+		public JsonVisitors.ObjectVisitor visitObject(String key) {
+			return new CustomValueObjectVisitor(values -> {
+				this.values.put(key, new ObjectImpl(values));
+			});
+		}
+
+		@Override
+		public JsonVisitors.ArrayVisitor visitArray(String key) {
+			return new CustomValueArrayVisitor(values -> {
+				this.values.put(key, new ArrayImpl(values));
+			});
+		}
+
+		@Override
+		public void visitBoolean(String key, boolean value) {
+			this.values.put(key, new BooleanImpl(value));
+		}
+
+		@Override
+		public void visitNumber(String key, Number number) {
+			this.values.put(key, new NumberImpl(number));
+		}
+
+		@Override
+		public void visitString(String key, String value) {
+			this.values.put(key, new StringImpl(value));
+		}
+
+		@Override
+		public void visitNull(String key) {
+			this.values.put(key, CustomValueImpl.NULL);
+		}
+
+		@Override
+		public void pop() {
+			if (this.applyCallback != null) {
+				this.applyCallback.accept(this.values);
+			}
+		}
+
+		Map<String, CustomValue> getValues() {
+			return this.values;
+		}
+	}
+
+	static final class CustomValueArrayVisitor implements JsonVisitors.ArrayVisitor {
+		private final List<CustomValue> values = new ArrayList<>();
+		private final Consumer<List<CustomValue>> applyCallback;
+
+		CustomValueArrayVisitor() {
+			this(null);
+		}
+
+		CustomValueArrayVisitor(Consumer<List<CustomValue>> applyCallback) {
+			this.applyCallback = applyCallback;
+		}
+
+		@Override
+		public JsonVisitors.ObjectVisitor visitObject(int idx) {
+			return new CustomValueObjectVisitor(values -> {
+				
+			});
 		}
 	}
 }
