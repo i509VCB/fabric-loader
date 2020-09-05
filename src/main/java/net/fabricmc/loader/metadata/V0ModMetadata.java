@@ -17,7 +17,6 @@
 package net.fabricmc.loader.metadata;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -34,7 +33,7 @@ import net.fabricmc.loader.api.metadata.ModDependency;
 import net.fabricmc.loader.api.metadata.ModEnvironment;
 import net.fabricmc.loader.api.metadata.Person;
 
-final class NewV0ModMetadata extends AbstractModMetadata implements LoaderModMetadata {
+final class V0ModMetadata extends AbstractModMetadata implements LoaderModMetadata {
 	private static final Mixins EMPTY_MIXINS = new Mixins(Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
 	// Required
 	private final String id;
@@ -58,14 +57,14 @@ final class NewV0ModMetadata extends AbstractModMetadata implements LoaderModMet
 	private final ContactInformation links;
 	private final String license;
 
-	NewV0ModMetadata(String id, Version version, Map<String, ModDependency> requires, Map<String, ModDependency> conflicts, Mixins mixins, ModEnvironment environment, String initializer, Collection<String> initializers, String name, String description, Map<String, ModDependency> recommends, Collection<Person> authors, Collection<Person> contributors, ContactInformation links, String license) {
+	V0ModMetadata(String id, Version version, Map<String, ModDependency> requires, Map<String, ModDependency> conflicts, Mixins mixins, ModEnvironment environment, String initializer, Collection<String> initializers, String name, String description, Map<String, ModDependency> recommends, Collection<Person> authors, Collection<Person> contributors, ContactInformation links, String license) {
 		this.id = id;
 		this.version = version;
 		this.requires = Collections.unmodifiableMap(requires);
 		this.conflicts = Collections.unmodifiableMap(conflicts);
 
 		if (mixins == null) {
-			this.mixins = NewV0ModMetadata.EMPTY_MIXINS;
+			this.mixins = V0ModMetadata.EMPTY_MIXINS;
 		} else {
 			this.mixins = mixins;
 		}

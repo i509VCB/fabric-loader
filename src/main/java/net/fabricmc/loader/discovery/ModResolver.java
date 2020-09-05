@@ -27,7 +27,7 @@ import net.fabricmc.loader.api.Version;
 import net.fabricmc.loader.launch.common.FabricLauncherBase;
 import net.fabricmc.loader.metadata.LoaderModMetadata;
 import net.fabricmc.loader.metadata.NestedJarEntry;
-import net.fabricmc.loader.metadata.NewModMetadataParser;
+import net.fabricmc.loader.metadata.ModMetadataParser;
 import net.fabricmc.loader.util.FileSystemUtil;
 import net.fabricmc.loader.util.UrlConversionException;
 import net.fabricmc.loader.util.UrlUtil;
@@ -460,7 +460,7 @@ public class ModResolver {
 			LoaderModMetadata[] info;
 
 			try {
-				info = new LoaderModMetadata[] { NewModMetadataParser.parseMetadata(modJson) };
+				info = new LoaderModMetadata[] { ModMetadataParser.parseMetadata(modJson) };
 			} catch (JsonParserException e) {
 				throw new RuntimeException(String.format("Mod at \"%s\" has an invalid fabric.mod.json file!", path), e);
 			} catch (NoSuchFileException e) {
@@ -608,8 +608,8 @@ public class ModResolver {
 		loader.getLogger().debug("Mod resolution time: " + (time3 - time2) + "ms");
 
 		for (ModCandidate candidate : result.values()) {
-			if (candidate.getInfo().getSchemaVersion() < NewModMetadataParser.LATEST_VERSION) {
-				loader.getLogger().warn("Mod ID " + candidate.getInfo().getId() + " uses outdated schema version: " + candidate.getInfo().getSchemaVersion() + " < " + NewModMetadataParser.LATEST_VERSION);
+			if (candidate.getInfo().getSchemaVersion() < ModMetadataParser.LATEST_VERSION) {
+				loader.getLogger().warn("Mod ID " + candidate.getInfo().getId() + " uses outdated schema version: " + candidate.getInfo().getSchemaVersion() + " < " + ModMetadataParser.LATEST_VERSION);
 			}
 
 			candidate.getInfo().emitFormatWarnings(loader.getLogger());

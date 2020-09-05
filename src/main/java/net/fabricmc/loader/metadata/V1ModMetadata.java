@@ -28,15 +28,13 @@ import org.apache.logging.log4j.Logger;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.Version;
-import net.fabricmc.loader.api.VersionParsingException;
 import net.fabricmc.loader.api.metadata.ContactInformation;
 import net.fabricmc.loader.api.metadata.CustomValue;
 import net.fabricmc.loader.api.metadata.ModDependency;
 import net.fabricmc.loader.api.metadata.ModEnvironment;
 import net.fabricmc.loader.api.metadata.Person;
-import net.fabricmc.loader.util.version.VersionPredicateParser;
 
-final class NewV1ModMetadata extends AbstractModMetadata implements LoaderModMetadata {
+final class V1ModMetadata extends AbstractModMetadata implements LoaderModMetadata {
 	static final IconEntry NONE = size -> Optional.empty();
 
 	// Required values
@@ -78,7 +76,7 @@ final class NewV1ModMetadata extends AbstractModMetadata implements LoaderModMet
 	// Optional (custom values)
 	private final Map<String, CustomValue> customValues;
 
-	NewV1ModMetadata(String id, Version version, ModEnvironment environment, Map<String, List<EntrypointMetadata>> entrypoints, Collection<NestedJarEntry> jars, Collection<MixinEntry> mixins, /* @Nullable */ String accessWidener, Map<String, ModDependency> depends, Map<String, ModDependency> recommends, Map<String, ModDependency> suggests, Map<String, ModDependency> conflicts, Map<String, ModDependency> breaks, Map<String, ModDependency> requires, /* @Nullable */ String name, String description, Collection<Person> authors, Collection<Person> contributors, ContactInformation contact, Collection<String> license, IconEntry icon, Map<String, String> languageAdapters, Map<String, CustomValue> customValues) {
+	V1ModMetadata(String id, Version version, ModEnvironment environment, Map<String, List<EntrypointMetadata>> entrypoints, Collection<NestedJarEntry> jars, Collection<MixinEntry> mixins, /* @Nullable */ String accessWidener, Map<String, ModDependency> depends, Map<String, ModDependency> recommends, Map<String, ModDependency> suggests, Map<String, ModDependency> conflicts, Map<String, ModDependency> breaks, Map<String, ModDependency> requires, /* @Nullable */ String name, String description, Collection<Person> authors, Collection<Person> contributors, ContactInformation contact, Collection<String> license, IconEntry icon, Map<String, String> languageAdapters, Map<String, CustomValue> customValues) {
 		this.id = id;
 		this.version = version;
 		this.environment = environment;
@@ -102,7 +100,7 @@ final class NewV1ModMetadata extends AbstractModMetadata implements LoaderModMet
 		if (icon != null) {
 			this.icon = icon;
 		} else {
-			this.icon = NewV1ModMetadata.NONE;
+			this.icon = V1ModMetadata.NONE;
 		}
 
 		this.languageAdapters = Collections.unmodifiableMap(languageAdapters);

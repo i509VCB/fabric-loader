@@ -24,7 +24,7 @@ import java.nio.file.Path;
 import com.grack.nanojson.JsonParserException;
 import com.grack.nanojson.JsonReader;
 
-public final class NewModMetadataParser {
+public final class ModMetadataParser {
 	public static final int LATEST_VERSION = 1;
 	// Per the ECMA-404 (www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf), the JSON spec does not prohibit duplicate keys.
 	// For all intensive purposes of replicating the logic of Gson before we have migrated to Nanojson, duplicate keys will replace previous entries.
@@ -41,7 +41,7 @@ public final class NewModMetadataParser {
 			// We don't know the version of the `fabric.mod.json`.
 			// The first thing we do is figure out the schema version of the file.
 			// If the schemaVersion field is absent, assume version 0
-			schemaVersion = NewModMetadataParser.detectVersion(reader);
+			schemaVersion = ModMetadataParser.detectVersion(reader);
 		}
 
 		switch (schemaVersion) {
@@ -92,6 +92,6 @@ public final class NewModMetadataParser {
 		}
 	}
 
-	private NewModMetadataParser() {
+	private ModMetadataParser() {
 	}
 }

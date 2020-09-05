@@ -63,7 +63,7 @@ final class V0ModMetadataParser {
 			// Optional (mod loading)
 			Map<String, ModDependency> requires = new HashMap<>();
 			Map<String, ModDependency> conflicts = new HashMap<>();
-			NewV0ModMetadata.Mixins mixins = null;
+			V0ModMetadata.Mixins mixins = null;
 			ModEnvironment environment = ModEnvironment.UNIVERSAL; // Default is always universal
 			String initializer = null;
 			List<String> initializers = new ArrayList<>();
@@ -204,7 +204,7 @@ final class V0ModMetadataParser {
 				}
 			}
 
-			return new NewV0ModMetadata(id, version, requires, conflicts, mixins, environment, initializer, initializers, name, description, recommends, authors, contributors, links, license);
+			return new V0ModMetadata(id, version, requires, conflicts, mixins, environment, initializer, initializers, name, description, recommends, authors, contributors, links, license);
 		}
 	}
 
@@ -252,7 +252,7 @@ final class V0ModMetadataParser {
 		return new MapBackedContactInformation(contactInfo);
 	}
 
-	private static NewV0ModMetadata.Mixins readMixins(JsonReader reader) throws JsonParserException, ParseMetadataException {
+	private static V0ModMetadata.Mixins readMixins(JsonReader reader) throws JsonParserException, ParseMetadataException {
 		final List<String> client = new ArrayList<>();
 		final List<String> common = new ArrayList<>();
 		final List<String> server = new ArrayList<>();
@@ -277,7 +277,7 @@ final class V0ModMetadataParser {
 			}
 		}
 
-		return new NewV0ModMetadata.Mixins(client, common, server);
+		return new V0ModMetadata.Mixins(client, common, server);
 	}
 
 	private static List<String> readStringArray(JsonReader reader, String key) throws JsonParserException, ParseMetadataException {
