@@ -172,7 +172,7 @@ final class V0ModMetadataParser {
 					V0ModMetadataParser.readPeople(reader, contributors);
 					break;
 				case "links":
-					// TODO
+					links = V0ModMetadataParser.readLinks(reader);
 					break;
 				case "license":
 					if (reader.current() != JsonReader.Type.STRING) {
@@ -193,6 +193,11 @@ final class V0ModMetadataParser {
 				throw new ParseMetadataException.MissingRequired("version");
 			}
 
+			// Optional stuf
+			if (links == null) {
+				links = ContactInformation.EMPTY;
+			}
+
 			// `initializer` and `initializers` cannot be used at the same time
 			if (initializer != null) {
 				if (!initializers.isEmpty()) {
@@ -202,6 +207,50 @@ final class V0ModMetadataParser {
 
 			return new NewV0ModMetadata(id, version, requires, conflicts, mixins, environment, initializer, initializers, name, description, recommends, authors, contributors, links, license);
 		}
+	}
+
+	private static ContactInformation readLinks(JsonReader reader) throws JsonParserException, ParseMetadataException {
+		final Map<String, String> contactInfo = new HashMap<>();
+
+		switch (reader.current()) {
+		case STRING:
+			contactInfo.put("homepage", reader.string());
+			break;
+		case OBJECT:
+			reader.object();
+
+			while (reader.next()) {
+				switch (reader.key()) {
+				case "homepage":
+					if (reader.current() != JsonReader.Type.STRING) {
+						throw new ParseMetadataException("homepage link must be a string");
+					}
+
+					contactInfo.put("homepage", reader.string());
+					break;
+				case "issues":
+					if (reader.current() != JsonReader.Type.STRING) {
+						throw new ParseMetadataException("issues link must be a string");
+					}
+
+					contactInfo.put("issues", reader.string());
+					break;
+				case "sources":
+					if (reader.current() != JsonReader.Type.STRING) {
+						throw new ParseMetadataException("sources link must be a string");
+					}
+
+					contactInfo.put("sources", reader.string());
+					break;
+				}
+			}
+
+			break;
+		default:
+			throw new ParseMetadataException("Expected links to be an object or string");
+		}
+
+		return new MapBackedContactInformation(contactInfo);
 	}
 
 	private static NewV0ModMetadata.Mixins readMixins(JsonReader reader) throws JsonParserException, ParseMetadataException {

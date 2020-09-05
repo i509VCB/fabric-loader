@@ -5,6 +5,7 @@ import com.google.gson.JsonObject
 plugins {
 	id 'java'
 	id 'maven-publish'
+	id 'com.github.johnrengelman.shadow' version '6.0.0'
 
 	id 'idea'
 	id 'eclipse'
