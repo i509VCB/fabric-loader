@@ -25,6 +25,7 @@ import com.grack.nanojson.JsonParserException;
 import com.grack.nanojson.JsonReader;
 
 public final class NewModMetadataParser {
+	public static final int LATEST_VERSION = 1;
 	// Per the ECMA-404 (www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf), the JSON spec does not prohibit duplicate keys.
 	// For all intensive purposes of replicating the logic of Gson before we have migrated to Nanojson, duplicate keys will replace previous entries.
 	public static LoaderModMetadata parseMetadata(Path modJson) throws JsonParserException, IOException, ParseMetadataException {

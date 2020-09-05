@@ -18,13 +18,14 @@ package net.fabricmc.loader.minecraft;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import com.grack.nanojson.JsonParserException;
+import com.grack.nanojson.JsonReader;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
@@ -32,8 +33,6 @@ import org.objectweb.asm.Handle;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
-
-import com.google.gson.stream.JsonReader;
 
 import net.fabricmc.loader.util.FileSystemUtil;
 import net.fabricmc.loader.util.version.SemanticVersionImpl;
@@ -113,23 +112,22 @@ public final class McVersionLookup {
 	}
 
 	private static McVersion fromVersionJson(InputStream is) {
-		try (JsonReader reader = new JsonReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
+		try {
+			JsonReader reader = JsonReader.from(is);
 			String id = null;
 			String name = null;
 			String release = null;
 
-			reader.beginObject();
+			reader.object();
 
-			while (reader.hasNext()) {
-				switch (reader.nextName()) {
-				case "id": id = reader.nextString(); break;
-				case "name": name = reader.nextString(); break;
-				case "release_target": release = reader.nextString(); break;
-				default: reader.skipValue();
+			while (reader.next()) {
+				switch (reader.key()) {
+				case "id": id = reader.string(); break;
+				case "name": name = reader.string(); break;
+				case "release_target": release = reader.string(); break;
+				default:
 				}
 			}
-
-			reader.endObject();
 
 			if (name == null) {
 				name = id;
@@ -138,7 +136,7 @@ public final class McVersionLookup {
 			}
 
 			if (name != null && release != null) return new McVersion(name, release);
-		} catch (IOException e) {
+		} catch (JsonParserException e) {
 			e.printStackTrace();
 		}
 

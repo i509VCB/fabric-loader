@@ -139,6 +139,7 @@ class KnotClassLoader extends SecureClassLoader implements KnotClassLoaderInterf
 		synchronized (getClassLoadingLock(name)) {
 			Class<?> c = findLoadedClass(name);
 
+			// TODO: REMOVE ME NOW
 			if (c == null && !name.startsWith("com.google.gson.") && !name.startsWith("java.")) { // FIXME: remove the GSON exclusion once loader stops using it (or repackages it)
 				byte[] input = delegate.getPostMixinClassByteArray(name);
 				if (input != null) {

@@ -19,7 +19,6 @@ package net.fabricmc.loader.discovery;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import com.google.common.jimfs.PathType;
-import com.google.gson.*;
 
 import net.fabricmc.loader.FabricLoader;
 import net.fabricmc.loader.api.metadata.ModDependency;
@@ -27,8 +26,8 @@ import net.fabricmc.loader.game.GameProvider.BuiltinMod;
 import net.fabricmc.loader.api.Version;
 import net.fabricmc.loader.launch.common.FabricLauncherBase;
 import net.fabricmc.loader.metadata.LoaderModMetadata;
-import net.fabricmc.loader.metadata.ModMetadataParser;
 import net.fabricmc.loader.metadata.NestedJarEntry;
+import net.fabricmc.loader.metadata.NewModMetadataParser;
 import net.fabricmc.loader.util.FileSystemUtil;
 import net.fabricmc.loader.util.UrlConversionException;
 import net.fabricmc.loader.util.UrlUtil;
@@ -39,10 +38,11 @@ import net.fabricmc.loader.util.sat4j.specs.IProblem;
 import net.fabricmc.loader.util.sat4j.specs.ISolver;
 import net.fabricmc.loader.util.sat4j.specs.IVecInt;
 import net.fabricmc.loader.util.sat4j.specs.TimeoutException;
+
+import com.grack.nanojson.JsonParserException;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
@@ -459,9 +459,9 @@ public class ModResolver {
 
 			LoaderModMetadata[] info;
 
-			try (InputStream stream = Files.newInputStream(modJson)) {
-				info = ModMetadataParser.getMods(loader, stream);
-			} catch (JsonParseException e) {
+			try {
+				info = new LoaderModMetadata[] { NewModMetadataParser.parseMetadata(modJson) };
+			} catch (JsonParserException e) {
 				throw new RuntimeException(String.format("Mod at \"%s\" has an invalid fabric.mod.json file!", path), e);
 			} catch (NoSuchFileException e) {
 				info = new LoaderModMetadata[0];
@@ -608,8 +608,8 @@ public class ModResolver {
 		loader.getLogger().debug("Mod resolution time: " + (time3 - time2) + "ms");
 
 		for (ModCandidate candidate : result.values()) {
-			if (candidate.getInfo().getSchemaVersion() < ModMetadataParser.LATEST_VERSION) {
-				loader.getLogger().warn("Mod ID " + candidate.getInfo().getId() + " uses outdated schema version: " + candidate.getInfo().getSchemaVersion() + " < " + ModMetadataParser.LATEST_VERSION);
+			if (candidate.getInfo().getSchemaVersion() < NewModMetadataParser.LATEST_VERSION) {
+				loader.getLogger().warn("Mod ID " + candidate.getInfo().getId() + " uses outdated schema version: " + candidate.getInfo().getSchemaVersion() + " < " + NewModMetadataParser.LATEST_VERSION);
 			}
 
 			candidate.getInfo().emitFormatWarnings(loader.getLogger());
