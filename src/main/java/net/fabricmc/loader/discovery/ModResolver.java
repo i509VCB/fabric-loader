@@ -460,7 +460,7 @@ public class ModResolver {
 			LoaderModMetadata[] info;
 
 			try {
-				info = new LoaderModMetadata[] { ModMetadataParser.parseMetadata(modJson) };
+				info = new LoaderModMetadata[] { ModMetadataParser.parseMetadata(modJson, null) };
 			} catch (JsonParserException e) {
 				throw new RuntimeException(String.format("Mod at \"%s\" has an invalid fabric.mod.json file!", path), e);
 			} catch (NoSuchFileException e) {

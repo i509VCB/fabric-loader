@@ -54,12 +54,12 @@ final class V1ModJsonParsingTests {
 		final Path dir = V1ModJsonParsingTests.testLocation.resolve("minimumRequirements");
 
 		// Required fields
-		final LoaderModMetadata metadata = ModMetadataParser.parseMetadata(dir.resolve("required.json"));
+		final LoaderModMetadata metadata = ModMetadataParser.parseMetadata(dir.resolve("required.json"), null);
 		assertNotNull(metadata, "Failed to read mod metadata!");
 		this.validateRequiredValues(metadata);
 
 		// Required fields in different order to verify we don't have ordering issues
-		final LoaderModMetadata reversedMetadata = ModMetadataParser.parseMetadata(dir.resolve("required_reversed.json"));
+		final LoaderModMetadata reversedMetadata = ModMetadataParser.parseMetadata(dir.resolve("required_reversed.json"), null);
 		assertNotNull(reversedMetadata, "Failed to read mod metadata!");
 		this.validateRequiredValues(reversedMetadata);
 	}
@@ -70,7 +70,7 @@ final class V1ModJsonParsingTests {
 
 		// Missing version should throw an exception
 		assertThrows(ParseMetadataException.MissingRequired.class, () -> {
-			ModMetadataParser.parseMetadata(dir.resolve("missing_version.json"));
+			ModMetadataParser.parseMetadata(dir.resolve("missing_version.json"), null);
 		}, "Missing version exception was not caught");
 	}
 
@@ -79,7 +79,7 @@ final class V1ModJsonParsingTests {
 		final Path dir = V1ModJsonParsingTests.testLocation.resolve("minimumRequirements");
 
 		assertThrows(ParseMetadataException.class, () -> {
-			ModMetadataParser.parseMetadata(dir.resolve("missing_version.json"));
+			ModMetadataParser.parseMetadata(dir.resolve("missing_version.json"), null);
 		}, "Parser did not fail when the duplicate \"schemaVersion\" mismatches");
 	}
 

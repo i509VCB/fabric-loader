@@ -26,69 +26,89 @@ import com.grack.nanojson.JsonReader;
 
 public final class ModMetadataParser {
 	public static final int LATEST_VERSION = 1;
+
 	// Per the ECMA-404 (www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf), the JSON spec does not prohibit duplicate keys.
 	// For all intensive purposes of replicating the logic of Gson before we have migrated to Nanojson, duplicate keys will replace previous entries.
-	public static LoaderModMetadata parseMetadata(Path modJson) throws JsonParserException, IOException, ParseMetadataException {
-		// We don't know the version of the `fabric.mod.json`.
-		// The first thing we do is figure out the schema version of the file.
-		// If the schemaVersion field is absent, assume version 0
-		// If we find the schemaVersion field, close the input stream and read using the proper facilities.
-		int schemaVersion;
-
+	public static LoaderModMetadata parseMetadata(Path modJson, /* @Nullable */ Integer schemaVersion) throws IOException, JsonParserException, ParseMetadataException {
+		// So some context:
+		// Per the json specification, ordering of fields is not typically enforced.
+		// Furthermore we cannot guarantee the `schemaVersion` is the first field in every `fabric.mod.json`
+		//
+		// To work around this, we do the following:
+		// Try to read first field
+		// If the first field is the schemaVersion, read the file normally.
+		//
+		// If the first field is not the schema version, fallback to a more exhaustive check.
+		// Read the rest of the file, looking for the `schemaVersion` field.
+		// If we find the field, cache the value
+		// If there happens to be another `schemaVersion` that has a differing value, then fail.
+		// At the end, if we find no `schemaVersion` then assume the `schemaVersion` is 0
+		// Re-read the JSON file.
 		try (final InputStream stream = Files.newInputStream(modJson)) {
 			final JsonReader reader = JsonReader.from(stream);
 
-			// We don't know the version of the `fabric.mod.json`.
-			// The first thing we do is figure out the schema version of the file.
-			// If the schemaVersion field is absent, assume version 0
-			schemaVersion = ModMetadataParser.detectVersion(reader);
-		}
+			if (reader.current() != JsonReader.Type.OBJECT) {
+				throw new ParseMetadataException("Root of \"fabric.mod.json\" must be an object");
+			}
 
-		switch (schemaVersion) {
-		case 1:
-			return V1ModMetadataParser.parse(modJson);
-		case 0:
-			return V0ModMetadataParser.parse(modJson);
-		default:
-			// TODO: Warn about version that does not exist yet
-			return null;
-		}
-	}
-
-	private static int detectVersion(JsonReader reader) throws JsonParserException, ParseMetadataException {
-		if (reader.current() == JsonReader.Type.OBJECT) {
 			reader.object();
 
-			Integer schemaVersion = null;
+			// This is our second read
+			if (schemaVersion != null) {
+				return ModMetadataParser.readModMetadata(reader, schemaVersion);
+			}
+
+			boolean firstField = true;
 
 			while (reader.next()) {
-				final String key = reader.key();
-
-				if (key.equals("schemaVersion")) {
+				// Try to read the schemaVersion
+				if (reader.key().equals("schemaVersion")) {
 					if (reader.current() != JsonReader.Type.NUMBER) {
-						throw new ParseMetadataException("Schema version was not a number");
+						throw new ParseMetadataException("\"schemaVersion\" must be a number.");
 					}
 
-					if (schemaVersion != null) {
-						// If we have a mismatch on the duplicate entry of the schemaVersion, then fail.
-						int version = reader.intVal();
+					if (firstField) {
+						// Finish reading the metadata
+						return ModMetadataParser.readModMetadata(reader, reader.intVal());
+					}
 
-						if (version != schemaVersion) {
-							throw new ParseMetadataException(String.format("Duplicate element of \"schemaVersion\" mismatches original schema version of \"%s\", duplicate value was \"%s\"", schemaVersion, version));
+					// schemaVersion is not the first field but we have found it
+					if (schemaVersion != null) {
+						// Possible duplicate version
+						final int read = reader.intVal();
+
+						if (schemaVersion != read) {
+							throw new ParseMetadataException(String.format("Found duplicate \"schemaVersion\" field with different value. First read value was \"%s\" and the duplicate value was \"%s\".", schemaVersion, read));
 						}
 
-						// Ok, duplicate matches
-						schemaVersion = version;
+						schemaVersion = read;
 					} else {
 						schemaVersion = reader.intVal();
 					}
 				}
-			}
 
-			// Assume version 0 if no `schemaVersion` field is present on root object
-			return schemaVersion != null ? schemaVersion : 0;
-		} else {
-			throw new ParseMetadataException("Root of \"fabric.mod.json\" must be an object");
+				firstField = false;
+			}
+		}
+
+		// No schema version was present, assume version 0
+		if (schemaVersion == null) {
+			schemaVersion = 0;
+		}
+
+		// Try reading the json file again with schemaVersion for context
+		return ModMetadataParser.parseMetadata(modJson, schemaVersion);
+	}
+
+	private static LoaderModMetadata readModMetadata(JsonReader reader, int schemaVersion) throws JsonParserException, ParseMetadataException {
+		switch (schemaVersion) {
+		case 1:
+			return V1ModMetadataParser.parse(reader);
+		case 0:
+			// TODO: Warn about v0 being deprecated when we have full object at the end of parse method
+			return V0ModMetadataParser.parse(reader);
+		default:
+			throw new ParseMetadataException(String.format("Invalid schema version \"%s\" was found", schemaVersion));
 		}
 	}
 

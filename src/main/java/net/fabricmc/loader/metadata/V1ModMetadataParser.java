@@ -45,175 +45,165 @@ final class V1ModMetadataParser {
 	/**
 	 * Reads a {@code fabric.mod.json} file of schema version {@code 1}.
 	 *
-	 * @param modJson the json file to read
+	 * @param reader the json reader to read the file with
 	 * @return the metadata of this file, null if the file could not be parsed
-	 * @throws IOException if there was any issue reading the file
+	 * @throws IOException         if there was any issue reading the file
 	 * @throws JsonParserException
 	 */
-	static LoaderModMetadata parse(Path modJson) throws IOException, JsonParserException, ParseMetadataException {
-		try (final InputStream stream = Files.newInputStream(modJson)) {
-			final JsonReader reader = JsonReader.from(stream);
+	static LoaderModMetadata parse(JsonReader reader) throws JsonParserException, ParseMetadataException {
+		// All the values the `fabric.mod.json` may contain:
+		// Required
+		String id = null;
+		Version version = null;
 
-			// A `Fabric.mod.json` must be an object
-			if (reader.current() != JsonReader.Type.OBJECT) {
-				throw new ParseMetadataException("Root of \"fabric.mod.json\" must be an object");
-			}
+		// Optional (mod loading)
+		ModEnvironment environment = ModEnvironment.UNIVERSAL; // Default is always universal
+		Map<String, List<EntrypointMetadata>> entrypoints = new HashMap<>();
+		List<NestedJarEntry> jars = new ArrayList<>();
+		List<V1ModMetadata.MixinEntry> mixins = new ArrayList<>();
+		String accessWidener = null;
 
-			reader.object();
+		// Optional (dependency resolution)
+		Map<String, ModDependency> depends = new HashMap<>();
+		Map<String, ModDependency> recommends = new HashMap<>();
+		Map<String, ModDependency> suggests = new HashMap<>();
+		Map<String, ModDependency> conflicts = new HashMap<>();
+		Map<String, ModDependency> breaks = new HashMap<>();
 
-			// All the values the `fabric.mod.json` may contain
-			// Required
-			String id = null;
-			Version version = null;
+		// Happy little accidents
+		@Deprecated
+		Map<String, ModDependency> requires = new HashMap<>();
 
-			// Optional (mod loading)
-			ModEnvironment environment = ModEnvironment.UNIVERSAL; // Default is always universal
-			Map<String, List<EntrypointMetadata>> entrypoints = new HashMap<>();
-			List<NestedJarEntry> jars = new ArrayList<>();
-			List<V1ModMetadata.MixinEntry> mixins = new ArrayList<>();
-			String accessWidener = null;
+		// Optional(metadata)
+		String name = null;
+		String description = null;
+		List<Person> authors = new ArrayList<>();
+		List<Person> contributors = new ArrayList<>();
+		ContactInformation contact = null;
+		List<String> license = new ArrayList<>();
+		V1ModMetadata.IconEntry icon = null;
 
-			// Optional (dependency resolution)
-			Map<String, ModDependency> depends = new HashMap<>();
-			Map<String, ModDependency> recommends = new HashMap<>();
-			Map<String, ModDependency> suggests = new HashMap<>();
-			Map<String, ModDependency> conflicts = new HashMap<>();
-			Map<String, ModDependency> breaks = new HashMap<>();
+		// Optional (language adapter providers)
+		Map<String, String> languageAdapters = new HashMap<>();
 
-			// Happy little accidents
-			@Deprecated
-			Map<String, ModDependency> requires = new HashMap<>();
+		// Optional (custom values)
+		Map<String, CustomValue> customValues = new HashMap<>();
 
-			// Optional(metadata)
-			String name = null;
-			String description = null;
-			List<Person> authors = new ArrayList<>();
-			List<Person> contributors = new ArrayList<>();
-			ContactInformation contact = null;
-			List<String> license = new ArrayList<>();
-			V1ModMetadata.IconEntry icon = null;
-
-			// Optional (language adapter providers)
-			Map<String, String> languageAdapters = new HashMap<>();
-
-			// Optional (custom values)
-			Map<String, CustomValue> customValues = new HashMap<>();
-
-			while (reader.next()) {
-				// Work our way from required to entirely optional
-				switch (reader.key()) {
-				case "id":
-					if (reader.current() != JsonReader.Type.STRING) {
-						throw new ParseMetadataException("Mod id must be a non-empty string with a length of 3-64 characters.");
-					}
-
-					id = reader.string();
-					break;
-				case "version":
-					if (reader.current() != JsonReader.Type.STRING) {
-						throw new ParseMetadataException("Version must be a non-empty string");
-					}
-
-					try {
-						version = VersionDeserializer.deserialize(reader.string());
-					} catch (VersionParsingException e) {
-						throw new ParseMetadataException("Failed to parse version", e);
-					}
-
-					break;
-				case "environment":
-					if (reader.current() != JsonReader.Type.STRING) {
-						throw new ParseMetadataException("Environment must be a string");
-					}
-
-					environment = V1ModMetadataParser.readEnvironment(reader);
-					break;
-				case "entrypoints":
-					V1ModMetadataParser.readEntrypoints(reader, entrypoints);
-					break;
-				case "jars":
-					V1ModMetadataParser.readNestedJarEntries(reader, jars);
-					break;
-				case "mixins":
-					V1ModMetadataParser.readMixinConfigs(reader, mixins);
-					break;
-				case "accessWidener":
-					if (reader.current() != JsonReader.Type.STRING) {
-						throw new ParseMetadataException("Access Widener file must be a string");
-					}
-
-					accessWidener = reader.string();
-					break;
-				case "depends":
-					V1ModMetadataParser.readDependenciesContainer(reader, depends);
-					break;
-				case "recommends":
-					V1ModMetadataParser.readDependenciesContainer(reader, recommends);
-					break;
-				case "suggests":
-					V1ModMetadataParser.readDependenciesContainer(reader, suggests);
-					break;
-				case "conflicts":
-					V1ModMetadataParser.readDependenciesContainer(reader, conflicts);
-					break;
-				case "breaks":
-					V1ModMetadataParser.readDependenciesContainer(reader, breaks);
-					break;
-				case "requires":
-					V1ModMetadataParser.readDependenciesContainer(reader, requires);
-					break;
-				case "name":
-					if (reader.current() != JsonReader.Type.STRING) {
-						throw new ParseMetadataException("Mod name must be a string");
-					}
-
-					name = reader.string();
-					break;
-				case "description":
-					if (reader.current() != JsonReader.Type.STRING) {
-						throw new ParseMetadataException("Mod description must be a string");
-					}
-
-					description = reader.string();
-					break;
-				case "authors":
-					V1ModMetadataParser.parsePeople(reader, authors);
-					break;
-				case "contributors":
-					V1ModMetadataParser.parsePeople(reader, contributors);
-					break;
-				case "contact":
-					contact = V1ModMetadataParser.readContactInfo(reader);
-					break;
-				case "license":
-					V1ModMetadataParser.readLicense(reader, license);
-					break;
-				case "icon":
-					icon = V1ModMetadataParser.readIcon(reader);
-					break;
-				case "languageAdapters":
-					V1ModMetadataParser.readLanguageAdapters(reader, languageAdapters);
-					break;
-				case "custom":
-					V1ModMetadataParser.readCustomValues(reader, customValues);
-					break;
-				default:
-					// TODO: Error?
-					break;
+		while (reader.next()) {
+			// Work our way from required to entirely optional
+			switch (reader.key()) {
+			// TODO: Handle scenario where second schemaVersion field is present and does not match
+			case "id":
+				if (reader.current() != JsonReader.Type.STRING) {
+					throw new ParseMetadataException("Mod id must be a non-empty string with a length of 3-64 characters.");
 				}
-			}
 
-			// Validate all required fields are resolved
-			if (id == null) {
-				throw new ParseMetadataException.MissingRequired("id");
-			}
+				id = reader.string();
+				break;
+			case "version":
+				if (reader.current() != JsonReader.Type.STRING) {
+					throw new ParseMetadataException("Version must be a non-empty string");
+				}
 
-			if (version == null) {
-				throw new ParseMetadataException.MissingRequired("version");
-			}
+				try {
+					version = VersionDeserializer.deserialize(reader.string());
+				} catch (VersionParsingException e) {
+					throw new ParseMetadataException("Failed to parse version", e);
+				}
 
-			return new V1ModMetadata(id, version, environment, entrypoints, jars, mixins, accessWidener, depends, recommends, suggests, conflicts, breaks, requires, name, description, authors, contributors, contact, license, icon, languageAdapters, customValues);
+				break;
+			case "environment":
+				if (reader.current() != JsonReader.Type.STRING) {
+					throw new ParseMetadataException("Environment must be a string");
+				}
+
+				environment = V1ModMetadataParser.readEnvironment(reader);
+				break;
+			case "entrypoints":
+				V1ModMetadataParser.readEntrypoints(reader, entrypoints);
+				break;
+			case "jars":
+				V1ModMetadataParser.readNestedJarEntries(reader, jars);
+				break;
+			case "mixins":
+				V1ModMetadataParser.readMixinConfigs(reader, mixins);
+				break;
+			case "accessWidener":
+				if (reader.current() != JsonReader.Type.STRING) {
+					throw new ParseMetadataException("Access Widener file must be a string");
+				}
+
+				accessWidener = reader.string();
+				break;
+			case "depends":
+				V1ModMetadataParser.readDependenciesContainer(reader, depends);
+				break;
+			case "recommends":
+				V1ModMetadataParser.readDependenciesContainer(reader, recommends);
+				break;
+			case "suggests":
+				V1ModMetadataParser.readDependenciesContainer(reader, suggests);
+				break;
+			case "conflicts":
+				V1ModMetadataParser.readDependenciesContainer(reader, conflicts);
+				break;
+			case "breaks":
+				V1ModMetadataParser.readDependenciesContainer(reader, breaks);
+				break;
+			case "requires":
+				V1ModMetadataParser.readDependenciesContainer(reader, requires);
+				break;
+			case "name":
+				if (reader.current() != JsonReader.Type.STRING) {
+					throw new ParseMetadataException("Mod name must be a string");
+				}
+
+				name = reader.string();
+				break;
+			case "description":
+				if (reader.current() != JsonReader.Type.STRING) {
+					throw new ParseMetadataException("Mod description must be a string");
+				}
+
+				description = reader.string();
+				break;
+			case "authors":
+				V1ModMetadataParser.parsePeople(reader, authors);
+				break;
+			case "contributors":
+				V1ModMetadataParser.parsePeople(reader, contributors);
+				break;
+			case "contact":
+				contact = V1ModMetadataParser.readContactInfo(reader);
+				break;
+			case "license":
+				V1ModMetadataParser.readLicense(reader, license);
+				break;
+			case "icon":
+				icon = V1ModMetadataParser.readIcon(reader);
+				break;
+			case "languageAdapters":
+				V1ModMetadataParser.readLanguageAdapters(reader, languageAdapters);
+				break;
+			case "custom":
+				V1ModMetadataParser.readCustomValues(reader, customValues);
+				break;
+			default:
+				// TODO: Error?
+				break;
+			}
 		}
+
+		// Validate all required fields are resolved
+		if (id == null) {
+			throw new ParseMetadataException.MissingRequired("id");
+		}
+
+		if (version == null) {
+			throw new ParseMetadataException.MissingRequired("version");
+		}
+
+		return new V1ModMetadata(id, version, environment, entrypoints, jars, mixins, accessWidener, depends, recommends, suggests, conflicts, breaks, requires, name, description, authors, contributors, contact, license, icon, languageAdapters, customValues);
 	}
 
 	private static ModEnvironment readEnvironment(JsonReader reader) throws JsonParserException, ParseMetadataException {
@@ -221,7 +211,7 @@ final class V1ModMetadataParser {
 
 		if (environment.isEmpty() || environment.equals("*")) {
 			return ModEnvironment.UNIVERSAL;
-		}  else if (environment.equals("client")) {
+		} else if (environment.equals("client")) {
 			return ModEnvironment.CLIENT;
 		} else if (environment.equals("server")) {
 			return ModEnvironment.SERVER;

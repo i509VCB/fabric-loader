@@ -17,9 +17,6 @@
 package net.fabricmc.loader.metadata;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -44,168 +41,158 @@ final class V0ModMetadataParser {
 	private static final Pattern WEBSITE_PATTERN = Pattern.compile("\\((.+)\\)");
 	private static final Pattern EMAIL_PATTERN = Pattern.compile("<(.+)>");
 
-	public static LoaderModMetadata parse(Path modJson) throws JsonParserException, IOException, ParseMetadataException {
-		try (final InputStream stream = Files.newInputStream(modJson)) {
-			final JsonReader reader = JsonReader.from(stream);
+	public static LoaderModMetadata parse(JsonReader reader) throws JsonParserException, ParseMetadataException {
+		// All the values the `fabric.mod.json` may contain:
+		// Required
+		String id = null;
+		Version version = null;
 
-			// A `Fabric.mod.json` must be an object
-			if (reader.current() != JsonReader.Type.OBJECT) {
-				throw new ParseMetadataException("Root of \"fabric.mod.json\" must be an object");
-			}
+		// Optional (mod loading)
+		Map<String, ModDependency> requires = new HashMap<>();
+		Map<String, ModDependency> conflicts = new HashMap<>();
+		V0ModMetadata.Mixins mixins = null;
+		ModEnvironment environment = ModEnvironment.UNIVERSAL; // Default is always universal
+		String initializer = null;
+		List<String> initializers = new ArrayList<>();
 
-			reader.object();
+		String name = null;
+		String description = null;
+		Map<String, ModDependency> recommends = new HashMap<>();
+		List<Person> authors = new ArrayList<>();
+		List<Person> contributors = new ArrayList<>();
+		ContactInformation links = null;
+		String license = null;
 
-			// All the values the `fabric.mod.json` may contain
-			// Required
-			String id = null;
-			Version version = null;
+		while (reader.next()) {
+			switch (reader.key()) {
+			// TODO: Handle scenario where second schemaVersion field is present and does not match
+			case "id":
+				if (reader.current() != JsonReader.Type.STRING) {
+					throw new ParseMetadataException("Mod id must be a non-empty string with a length of 3-64 characters.");
+				}
 
-			// Optional (mod loading)
-			Map<String, ModDependency> requires = new HashMap<>();
-			Map<String, ModDependency> conflicts = new HashMap<>();
-			V0ModMetadata.Mixins mixins = null;
-			ModEnvironment environment = ModEnvironment.UNIVERSAL; // Default is always universal
-			String initializer = null;
-			List<String> initializers = new ArrayList<>();
+				id = reader.string();
+				break;
+			case "version":
+				if (reader.current() != JsonReader.Type.STRING) {
+					throw new ParseMetadataException("Version must be a non-empty string");
+				}
 
-			String name = null;
-			String description = null;
-			Map<String, ModDependency> recommends = new HashMap<>();
-			List<Person> authors = new ArrayList<>();
-			List<Person> contributors = new ArrayList<>();
-			ContactInformation links = null;
-			String license = null;
+				try {
+					version = VersionDeserializer.deserialize(reader.string());
+				} catch (VersionParsingException e) {
+					throw new ParseMetadataException("Failed to parse version", e);
+				}
 
-			while (reader.next()) {
-				switch (reader.key()) {
-				case "id":
-					if (reader.current() != JsonReader.Type.STRING) {
-						throw new ParseMetadataException("Mod id must be a non-empty string with a length of 3-64 characters.");
-					}
+				break;
+			case "requires":
+				V0ModMetadataParser.readDependenciesContainer(reader, requires, "requires");
+				break;
+			case "conflicts":
+				V0ModMetadataParser.readDependenciesContainer(reader, conflicts, "conflicts");
+				break;
+			case "mixins":
+				mixins = V0ModMetadataParser.readMixins(reader);
+				break;
+			case "side":
+				if (reader.current() != JsonReader.Type.STRING) {
+					throw new ParseMetadataException("Side must be a string");
+				}
 
-					id = reader.string();
+				switch (reader.string()) {
+				case "universal":
+					environment = ModEnvironment.UNIVERSAL;
 					break;
-				case "version":
-					if (reader.current() != JsonReader.Type.STRING) {
-						throw new ParseMetadataException("Version must be a non-empty string");
-					}
-
-					try {
-						version = VersionDeserializer.deserialize(reader.string());
-					} catch (VersionParsingException e) {
-						throw new ParseMetadataException("Failed to parse version", e);
-					}
-
+				case "client":
+					environment = ModEnvironment.CLIENT;
 					break;
-				case "requires":
-					V0ModMetadataParser.readDependenciesContainer(reader, requires, "requires");
-					break;
-				case "conflicts":
-					V0ModMetadataParser.readDependenciesContainer(reader, conflicts, "conflicts");
-					break;
-				case "mixins":
-					mixins = V0ModMetadataParser.readMixins(reader);
-					break;
-				case "side":
-					if (reader.current() != JsonReader.Type.STRING) {
-						throw new ParseMetadataException("Side must be a string");
-					}
-
-					switch (reader.string()) {
-					case "universal":
-						environment = ModEnvironment.UNIVERSAL;
-						break;
-					case "client":
-						environment = ModEnvironment.CLIENT;
-						break;
-					case "server":
-						environment = ModEnvironment.SERVER;
-						break;
-					}
-
-					break;
-				case "initializer":
-					if (reader.current() != JsonReader.Type.STRING) {
-						throw new ParseMetadataException("Initializer must be a non-empty string");
-					}
-
-					initializer = reader.string();
-					break;
-				case "initializers":
-					if (reader.current() != JsonReader.Type.ARRAY) {
-						throw new ParseMetadataException("Initializers must be in a list");
-					}
-
-					reader.array();
-
-					while (reader.next()) {
-						if (reader.current() != JsonReader.Type.STRING) {
-							throw new ParseMetadataException("Initializer in initializers list must be a string");
-						}
-
-						initializers.add(reader.string());
-					}
-
-					break;
-				case "name":
-					if (reader.current() != JsonReader.Type.STRING) {
-						throw new ParseMetadataException("Name must be a string");
-					}
-
-					name = reader.string();
-					break;
-				case "description":
-					if (reader.current() != JsonReader.Type.STRING) {
-						throw new ParseMetadataException("Mod description must be a string");
-					}
-
-					description = reader.string();
-					break;
-				case "recommends":
-					V0ModMetadataParser.readDependenciesContainer(reader, recommends, "recommends");
-					break;
-				case "authors":
-					V0ModMetadataParser.readPeople(reader, authors);
-					break;
-				case "contributors":
-					V0ModMetadataParser.readPeople(reader, contributors);
-					break;
-				case "links":
-					links = V0ModMetadataParser.readLinks(reader);
-					break;
-				case "license":
-					if (reader.current() != JsonReader.Type.STRING) {
-						throw new ParseMetadataException("License name must be a string");
-					}
-
-					license = reader.string();
+				case "server":
+					environment = ModEnvironment.SERVER;
 					break;
 				}
-			}
 
-			// Validate all required fields are resolved
-			if (id == null) {
-				throw new ParseMetadataException.MissingRequired("id");
-			}
-
-			if (version == null) {
-				throw new ParseMetadataException.MissingRequired("version");
-			}
-
-			// Optional stuff
-			if (links == null) {
-				links = ContactInformation.EMPTY;
-			}
-
-			// `initializer` and `initializers` cannot be used at the same time
-			if (initializer != null) {
-				if (!initializers.isEmpty()) {
-					throw new ParseMetadataException("initializer and initializers should not be set at the same time! (mod ID '" + id + "')");
+				break;
+			case "initializer":
+				if (reader.current() != JsonReader.Type.STRING) {
+					throw new ParseMetadataException("Initializer must be a non-empty string");
 				}
-			}
 
-			return new V0ModMetadata(id, version, requires, conflicts, mixins, environment, initializer, initializers, name, description, recommends, authors, contributors, links, license);
+				initializer = reader.string();
+				break;
+			case "initializers":
+				if (reader.current() != JsonReader.Type.ARRAY) {
+					throw new ParseMetadataException("Initializers must be in a list");
+				}
+
+				reader.array();
+
+				while (reader.next()) {
+					if (reader.current() != JsonReader.Type.STRING) {
+						throw new ParseMetadataException("Initializer in initializers list must be a string");
+					}
+
+					initializers.add(reader.string());
+				}
+
+				break;
+			case "name":
+				if (reader.current() != JsonReader.Type.STRING) {
+					throw new ParseMetadataException("Name must be a string");
+				}
+
+				name = reader.string();
+				break;
+			case "description":
+				if (reader.current() != JsonReader.Type.STRING) {
+					throw new ParseMetadataException("Mod description must be a string");
+				}
+
+				description = reader.string();
+				break;
+			case "recommends":
+				V0ModMetadataParser.readDependenciesContainer(reader, recommends, "recommends");
+				break;
+			case "authors":
+				V0ModMetadataParser.readPeople(reader, authors);
+				break;
+			case "contributors":
+				V0ModMetadataParser.readPeople(reader, contributors);
+				break;
+			case "links":
+				links = V0ModMetadataParser.readLinks(reader);
+				break;
+			case "license":
+				if (reader.current() != JsonReader.Type.STRING) {
+					throw new ParseMetadataException("License name must be a string");
+				}
+
+				license = reader.string();
+				break;
+			}
 		}
+
+		// Validate all required fields are resolved
+		if (id == null) {
+			throw new ParseMetadataException.MissingRequired("id");
+		}
+
+		if (version == null) {
+			throw new ParseMetadataException.MissingRequired("version");
+		}
+
+		// Optional stuff
+		if (links == null) {
+			links = ContactInformation.EMPTY;
+		}
+
+		// `initializer` and `initializers` cannot be used at the same time
+		if (initializer != null) {
+			if (!initializers.isEmpty()) {
+				throw new ParseMetadataException("initializer and initializers should not be set at the same time! (mod ID '" + id + "')");
+			}
+		}
+
+		return new V0ModMetadata(id, version, requires, conflicts, mixins, environment, initializer, initializers, name, description, recommends, authors, contributors, links, license);
 	}
 
 	private static ContactInformation readLinks(JsonReader reader) throws JsonParserException, ParseMetadataException {
