@@ -28,6 +28,7 @@ import net.fabricmc.loader.launch.common.FabricLauncherBase;
 import net.fabricmc.loader.metadata.LoaderModMetadata;
 import net.fabricmc.loader.metadata.NestedJarEntry;
 import net.fabricmc.loader.metadata.ModMetadataParser;
+import net.fabricmc.loader.metadata.ParseMetadataException;
 import net.fabricmc.loader.util.FileSystemUtil;
 import net.fabricmc.loader.util.UrlConversionException;
 import net.fabricmc.loader.util.UrlUtil;
@@ -461,7 +462,9 @@ public class ModResolver {
 
 			try {
 				info = new LoaderModMetadata[] { ModMetadataParser.parseMetadata(modJson, null) };
-			} catch (JsonParserException e) {
+			} catch (ParseMetadataException.MissingRequired e){
+				throw new RuntimeException(String.format("Mod at \"%s\" has an invalid fabric.mod.json file! The mod is missing the following required field!", path), e);
+			} catch (JsonParserException | ParseMetadataException e) {
 				throw new RuntimeException(String.format("Mod at \"%s\" has an invalid fabric.mod.json file!", path), e);
 			} catch (NoSuchFileException e) {
 				info = new LoaderModMetadata[0];
