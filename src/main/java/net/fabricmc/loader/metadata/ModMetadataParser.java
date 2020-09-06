@@ -53,7 +53,7 @@ public final class ModMetadataParser {
 
 			reader.object();
 
-			// This s second read, assume the best with schemaVersion we have been provided.
+			// This is the second read, assume the best with schemaVersion we have been provided.
 			if (schemaVersion != null) {
 				return ModMetadataParser.readModMetadata(reader, schemaVersion);
 			}
