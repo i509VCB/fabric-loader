@@ -25,10 +25,12 @@ package net.fabricmc.api;
  * @see DedicatedServerModInitializer
  * @see net.fabricmc.loader.api.FabricLoader#getEntrypointContainers(String, Class)
  */
+@Deprecated
 @FunctionalInterface
-public interface ModInitializer {
+public interface ModInitializer extends net.fabricmc.loader.api.entrypoint.ModInitializer {
 	/**
 	 * Runs the mod initializer.
 	 */
+	@Override
 	void onInitialize();
 }

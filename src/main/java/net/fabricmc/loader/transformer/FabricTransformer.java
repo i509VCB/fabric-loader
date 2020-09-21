@@ -21,6 +21,8 @@ import net.fabricmc.loader.FabricLoader;
 import net.fabricmc.loader.game.MinecraftGameProvider;
 import net.fabricmc.loader.launch.common.FabricLauncherBase;
 import net.fabricmc.loader.transformer.accesswidener.AccessWidenerVisitor;
+import net.fabricmc.loader.transformer.deprecation.EntrypointRemapClassVisitor;
+
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
@@ -57,16 +59,18 @@ public final class FabricTransformer {
 		ClassReader classReader = new ClassReader(bytes);
 		ClassWriter classWriter = new ClassWriter(0);
 		ClassVisitor visitor = classWriter;
-		int visitorCount = 0;
+
+		// Deprecate old entrypoint accesses
+		visitor = new EntrypointRemapClassVisitor(Opcodes.ASM8, visitor, "net/fabricmc/api/ModInitializer", "net/fabricmc/loader/api/entrypoint/ModInitializer");
+		visitor = new EntrypointRemapClassVisitor(Opcodes.ASM8, visitor, "net/fabricmc/api/ClientModInitializer", "net/fabricmc/loader/api/entrypoint/client/ClientModInitializer");
+		visitor = new EntrypointRemapClassVisitor(Opcodes.ASM8, visitor, "net/fabricmc/api/DedicatedServerModInitializer", "net/fabricmc/loader/api/entrypoint/server/DedicatedServerModInitializer");
 
 		if (applyAccessWidener) {
 			visitor = new AccessWidenerVisitor(Opcodes.ASM8, visitor, FabricLoader.INSTANCE.getAccessWidener());
-			visitorCount++;
 		}
 
 		if (transformAccess) {
 			visitor = new PackageAccessFixer(Opcodes.ASM8, visitor);
-			visitorCount++;
 		}
 
 		if (environmentStrip) {
@@ -77,12 +81,7 @@ public final class FabricTransformer {
 			}
 			if (!stripData.isEmpty()) {
 				visitor = new ClassStripper(Opcodes.ASM8, visitor, stripData.getStripInterfaces(), stripData.getStripFields(), stripData.getStripMethods());
-				visitorCount++;
 			}
-		}
-
-		if (visitorCount <= 0) {
-			return bytes;
 		}
 
 		classReader.accept(visitor, 0);
