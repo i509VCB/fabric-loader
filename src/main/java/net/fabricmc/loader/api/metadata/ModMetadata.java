@@ -23,9 +23,11 @@ import java.util.Optional;
 import com.google.gson.JsonElement;
 
 import net.fabricmc.loader.api.Version;
+import net.fabricmc.loader.api.metadata.game.GameModMetadata;
 
 /**
  * The metadata of a mod.
+ * @see GameModMetadata
  */
 public interface ModMetadata {
 	/**
@@ -57,6 +59,7 @@ public interface ModMetadata {
 	/**
 	 * Returns the mod's environment.
 	 */
+	// TODO: Move to Minecraft's own GameMetadata type - environments are Minecraft specific
 	ModEnvironment getEnvironment();
 
 	/**
@@ -155,6 +158,18 @@ public interface ModMetadata {
 	 * @return a map containing the custom values this mod defines.
 	 */
 	Map<String, CustomValue> getCustomValues();
+
+	/**
+	 * Gets game specific mod metadata for this mod.
+	 *
+	 * @param type the type of metadata object
+	 * @param <T> the type of metadata object
+	 * @return the game specific metadata for this mod
+	 * @throws IllegalArgumentException if game specific metadata type is not supported by the current game
+	 * @deprecated Not implemented yet!
+	 */
+	@Deprecated(/* forRemoval = false */)
+	<T extends GameModMetadata> T getGameMetadata(Class<T> type);
 
 	/**
 	 * @deprecated Use {@link #containsCustomValue} instead, this will be removed (can't expose GSON types)!

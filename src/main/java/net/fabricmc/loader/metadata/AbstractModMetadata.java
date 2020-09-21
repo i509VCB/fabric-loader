@@ -24,6 +24,7 @@ import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
+import net.fabricmc.loader.api.metadata.game.GameModMetadata;
 import net.fabricmc.loader.api.metadata.CustomValue;
 import net.fabricmc.loader.api.metadata.ModMetadata;
 
@@ -48,6 +49,11 @@ public abstract class AbstractModMetadata implements ModMetadata {
 	@Override
 	public CustomValue getCustomValue(String key) {
 		return getCustomValues().get(key);
+	}
+
+	@Override
+	public <T extends GameModMetadata> T getGameMetadata(Class<T> type) {
+		throw new IllegalArgumentException("Not implemented yet!");
 	}
 
 	private static JsonElement convert(CustomValue value) {
