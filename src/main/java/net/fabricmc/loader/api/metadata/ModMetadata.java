@@ -156,6 +156,10 @@ public interface ModMetadata {
 	 */
 	Map<String, CustomValue> getCustomValues();
 
+	default <T extends GameMetadata> T getCustomMetadata(Class<T> type) {
+		return null; // TODO: Idea
+	}
+
 	/**
 	 * @deprecated Use {@link #containsCustomValue} instead, this will be removed (can't expose GSON types)!
 	 */

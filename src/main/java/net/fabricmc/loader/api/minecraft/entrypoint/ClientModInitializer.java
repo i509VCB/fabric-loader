@@ -1,4 +1,4 @@
-package net.fabricmc.loader.api.entrypoint.client;
+package net.fabricmc.loader.api.minecraft.entrypoint;
 
 import net.fabricmc.api.DedicatedServerModInitializer;
 import net.fabricmc.api.EnvType;

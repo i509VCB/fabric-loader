@@ -1,6 +1,7 @@
 package net.fabricmc.loader.transformer.deprecation;
 
 import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
 
 public final class EntrypointRemapClassVisitor extends ClassVisitor {
@@ -16,6 +17,11 @@ public final class EntrypointRemapClassVisitor extends ClassVisitor {
 	@Override
 	public MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
 		return new Methods(super.visitMethod(access, name, descriptor, signature, exceptions));
+	}
+
+	@Override
+	public FieldVisitor visitField(int access, String name, String descriptor, String signature, Object value) {
+		return super.visitField(access, name, descriptor, signature, value); // TODO: Change type value
 	}
 
 	class Methods extends MethodVisitor {

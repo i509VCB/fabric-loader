@@ -30,7 +30,7 @@ package net.fabricmc.api;
  */
 @Deprecated
 @FunctionalInterface
-public interface ClientModInitializer extends net.fabricmc.loader.api.entrypoint.client.ClientModInitializer {
+public interface ClientModInitializer extends net.fabricmc.loader.api.minecraft.entrypoint.ClientModInitializer {
 	/**
 	 * Runs the mod initializer on the client environment.
 	 */

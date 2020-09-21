@@ -17,8 +17,8 @@
 package net.fabricmc.loader.entrypoint.minecraft.hooks;
 
 import net.fabricmc.loader.FabricLoader;
-import net.fabricmc.loader.api.entrypoint.ModInitializer;
-import net.fabricmc.loader.api.entrypoint.server.DedicatedServerModInitializer;
+import net.fabricmc.loader.api.minecraft.entrypoint.ModInitializer;
+import net.fabricmc.loader.api.minecraft.entrypoint.DedicatedServerModInitializer;
 
 import java.io.File;
 

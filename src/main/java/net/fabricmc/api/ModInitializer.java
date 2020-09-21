@@ -27,7 +27,7 @@ package net.fabricmc.api;
  */
 @Deprecated
 @FunctionalInterface
-public interface ModInitializer extends net.fabricmc.loader.api.entrypoint.ModInitializer {
+public interface ModInitializer extends net.fabricmc.loader.api.minecraft.entrypoint.ModInitializer {
 	/**
 	 * Runs the mod initializer.
 	 */
