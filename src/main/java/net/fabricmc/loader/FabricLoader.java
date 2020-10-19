@@ -21,11 +21,13 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -54,6 +56,8 @@ import net.fabricmc.loader.metadata.EntrypointMetadata;
 import net.fabricmc.loader.metadata.LoaderModMetadata;
 import net.fabricmc.loader.util.DefaultLanguageAdapter;
 import net.fabricmc.loader.transformer.accesswidener.AccessWidener;
+import net.fabricmc.loader.util.LoggingInterface;
+
 import org.objectweb.asm.Opcodes;
 
 /**
@@ -70,6 +74,11 @@ public class FabricLoader implements net.fabricmc.loader.api.FabricLoader {
 	public static final int ASM_VERSION = Opcodes.ASM9;
 
 	protected static Logger LOGGER = LogManager.getFormatterLogger("Fabric|Loader");
+	protected final LoggingInterface.Delegated logger = new LoggingInterface.Delegated(new LoggingInterface.Stdout((logType, prefix, message) -> {
+		final LocalDateTime now = LocalDateTime.now();
+
+		return String.format("[%s:%s:%s] [%s/%s] (%s) %s", now.getHour(), now.getMinute(), now.getSecond(), Thread.currentThread().getName(), logType.getName().toUpperCase(Locale.ROOT), prefix, message);
+	}, "fabricloader", false));
 
 	protected final Map<String, ModContainer> modMap = new HashMap<>();
 	protected List<ModContainer> mods = new ArrayList<>();
@@ -438,9 +447,9 @@ public class FabricLoader implements net.fabricmc.loader.api.FabricLoader {
 
 			if (!matchesKnot) {
 				if (containsKnot) {
-					getLogger().info("Environment: Target class loader is parent of game class loader.");
+					getOldLogger().info("Environment: Target class loader is parent of game class loader.");
 				} else {
-					getLogger().warn("\n\n* CLASS LOADER MISMATCH! THIS IS VERY BAD AND WILL PROBABLY CAUSE WEIRD ISSUES! *\n"
+					getOldLogger().warn("\n\n* CLASS LOADER MISMATCH! THIS IS VERY BAD AND WILL PROBABLY CAUSE WEIRD ISSUES! *\n"
 						+ " - Expected game class loader: " + FabricLauncherBase.getLauncher().getTargetClassLoader() + "\n"
 						+ " - Actual game class loader: " + gameClassLoader + "\n"
 						+ "Could not find the expected class loader in game class loader parents!\n");
@@ -453,11 +462,11 @@ public class FabricLoader implements net.fabricmc.loader.api.FabricLoader {
 		if (gameDir != null) {
 			try {
 				if (!gameDir.toRealPath().equals(newRunDir.toRealPath())) {
-					getLogger().warn("Inconsistent game execution directories: engine says " + newRunDir.toRealPath() + ", while initializer says " + gameDir.toRealPath() + "...");
+					getOldLogger().warn("Inconsistent game execution directories: engine says " + newRunDir.toRealPath() + ", while initializer says " + gameDir.toRealPath() + "...");
 					setGameDir(newRunDir);
 				}
 			} catch (IOException e) {
-				getLogger().warn("Exception while checking game execution directory consistency!", e);
+				getOldLogger().warn("Exception while checking game execution directory consistency!", e);
 			}
 		} else {
 			setGameDir(newRunDir);
@@ -468,7 +477,12 @@ public class FabricLoader implements net.fabricmc.loader.api.FabricLoader {
 		return accessWidener;
 	}
 
-	public Logger getLogger() {
+	public LoggingInterface getLogger() {
+		return this.logger;
+	}
+
+	@Deprecated
+	public Logger getOldLogger() {
 		return LOGGER;
 	}
 

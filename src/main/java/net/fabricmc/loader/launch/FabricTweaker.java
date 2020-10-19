@@ -25,6 +25,7 @@ import net.fabricmc.loader.game.MinecraftGameProvider;
 import net.fabricmc.loader.launch.common.FabricLauncherBase;
 import net.fabricmc.loader.launch.common.FabricMixinBootstrap;
 import net.fabricmc.loader.util.Arguments;
+import net.fabricmc.loader.util.LoggingInterface;
 import net.fabricmc.loader.util.UrlConversionException;
 import net.fabricmc.loader.util.UrlUtil;
 import net.minecraft.launchwrapper.IClassTransformer;
@@ -257,5 +258,10 @@ public abstract class FabricTweaker extends FabricLauncherBase implements ITweak
 	@Override
 	public boolean isDevelopment() {
 		return isDevelopment;
+	}
+
+	@Override
+	public LoggingInterface getLaunchLogger() {
+		return null;
 	}
 }

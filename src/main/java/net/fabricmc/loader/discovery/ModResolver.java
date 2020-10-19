@@ -428,7 +428,7 @@ public class ModResolver {
 			Path path, modJson, rootDir;
 			URL normalizedUrl;
 
-			loader.getLogger().debug("Testing " + url);
+			loader.getOldLogger().debug("Testing " + url);
 
 			try {
 				path = UrlUtil.asPath(url).normalize();
@@ -444,7 +444,7 @@ public class ModResolver {
 				rootDir = path;
 
 				if (loader.isDevelopmentEnvironment() && !Files.exists(modJson)) {
-					loader.getLogger().warn("Adding directory " + path + " to mod classpath in development environment - workaround for Gradle splitting mods into two directories");
+					loader.getOldLogger().warn("Adding directory " + path + " to mod classpath in development environment - workaround for Gradle splitting mods into two directories");
 					synchronized (launcherSyncObject) {
 						FabricLauncherBase.getLauncher().propose(url);
 					}
@@ -463,7 +463,7 @@ public class ModResolver {
 			LoaderModMetadata[] info;
 
 			try {
-				info = new LoaderModMetadata[] { ModMetadataParser.parseMetadata(loader.getLogger(), modJson) };
+				info = new LoaderModMetadata[] { ModMetadataParser.parseMetadata(loader.getOldLogger(), modJson) };
 			} catch (ParseMetadataException.MissingRequired e){
 				throw new RuntimeException(String.format("Mod at \"%s\" has an invalid fabric.mod.json file! The mod is missing the following required field!", path), e);
 			} catch (MalformedJsonException | ParseMetadataException e) {
@@ -505,12 +505,12 @@ public class ModResolver {
 				added = candidatesById.computeIfAbsent(candidate.getInfo().getId(), ModCandidateSet::new).add(candidate);
 
 				if (!added) {
-					loader.getLogger().debug(candidate.getOriginUrl() + " already present as " + candidate);
+					loader.getOldLogger().debug(candidate.getOriginUrl() + " already present as " + candidate);
 				} else {
-					loader.getLogger().debug("Adding " + candidate.getOriginUrl() + " as " + candidate);
+					loader.getOldLogger().debug("Adding " + candidate.getOriginUrl() + " as " + candidate);
 
 					List<Path> jarInJars = inMemoryCache.computeIfAbsent(candidate.getOriginUrl().toString(), (u) -> {
-						loader.getLogger().debug("Searching for nested JARs in " + candidate);
+						loader.getOldLogger().debug("Searching for nested JARs in " + candidate);
 						Collection<NestedJarEntry> jars = candidate.getInfo().getJars();
 						List<Path> list = new ArrayList<>(jars.size());
 
@@ -519,7 +519,7 @@ public class ModResolver {
 							.forEach((modPath) -> {
 								if (!Files.isDirectory(modPath) && modPath.toString().endsWith(".jar")) {
 									// TODO: pre-check the JAR before loading it, if possible
-									loader.getLogger().debug("Found nested JAR: " + modPath);
+									loader.getOldLogger().debug("Found nested JAR: " + modPath);
 									Path dest = inMemoryFs.getPath(UUID.randomUUID() + ".jar");
 
 									try {
@@ -606,18 +606,18 @@ public class ModResolver {
 		}
 
 		long time2 = System.currentTimeMillis();
-		Map<String, ModCandidate> result = findCompatibleSet(loader.getLogger(), candidatesById);
+		Map<String, ModCandidate> result = findCompatibleSet(loader.getOldLogger(), candidatesById);
 
 		long time3 = System.currentTimeMillis();
-		loader.getLogger().debug("Mod resolution detection time: " + (time2 - time1) + "ms");
-		loader.getLogger().debug("Mod resolution time: " + (time3 - time2) + "ms");
+		loader.getOldLogger().debug("Mod resolution detection time: " + (time2 - time1) + "ms");
+		loader.getOldLogger().debug("Mod resolution time: " + (time3 - time2) + "ms");
 
 		for (ModCandidate candidate : result.values()) {
 			if (candidate.getInfo().getSchemaVersion() < ModMetadataParser.LATEST_VERSION) {
-				loader.getLogger().warn("Mod ID " + candidate.getInfo().getId() + " uses outdated schema version: " + candidate.getInfo().getSchemaVersion() + " < " + ModMetadataParser.LATEST_VERSION);
+				loader.getOldLogger().warn("Mod ID " + candidate.getInfo().getId() + " uses outdated schema version: " + candidate.getInfo().getSchemaVersion() + " < " + ModMetadataParser.LATEST_VERSION);
 			}
 
-			candidate.getInfo().emitFormatWarnings(loader.getLogger());
+			candidate.getInfo().emitFormatWarnings(loader.getOldLogger());
 		}
 
 		return result;

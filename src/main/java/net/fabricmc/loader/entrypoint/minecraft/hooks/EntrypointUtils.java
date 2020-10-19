@@ -17,12 +17,9 @@
 package net.fabricmc.loader.entrypoint.minecraft.hooks;
 
 import net.fabricmc.loader.FabricLoader;
-import net.fabricmc.loader.api.ModContainer;
 import net.fabricmc.loader.api.entrypoint.EntrypointContainer;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.function.Consumer;
 
 public final class EntrypointUtils {
@@ -31,7 +28,7 @@ public final class EntrypointUtils {
 		FabricLoader loader = FabricLoader.INSTANCE;
 
 		if (!loader.hasEntrypoints(name)) {
-			loader.getLogger().debug("No subscribers for entrypoint '" + name + "'");
+			loader.getOldLogger().debug("No subscribers for entrypoint '" + name + "'");
 		} else {
 			invoke0(name, type, invoker);
 		}
@@ -43,7 +40,7 @@ public final class EntrypointUtils {
 		RuntimeException exception = null;
 		Collection<EntrypointContainer<T>> entrypoints = loader.getEntrypointContainers(name, type);
 
-		loader.getLogger().debug("Iterating over entrypoint '" + name + "'");
+		loader.getOldLogger().debug("Iterating over entrypoint '" + name + "'");
 
 		for (EntrypointContainer<T> container : entrypoints) {
 			try {

@@ -24,6 +24,7 @@ import net.fabricmc.loader.game.GameProvider;
 import net.fabricmc.loader.game.GameProviders;
 import net.fabricmc.loader.launch.common.FabricLauncherBase;
 import net.fabricmc.loader.launch.common.FabricMixinBootstrap;
+import net.fabricmc.loader.util.LoggingInterface;
 import net.fabricmc.loader.util.UrlConversionException;
 import net.fabricmc.loader.util.UrlUtil;
 import org.spongepowered.asm.launch.MixinBootstrap;
@@ -33,12 +34,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public final class Knot extends FabricLauncherBase {
+	private final LoggingInterface.Delegated logger;
 	protected Map<String, Object> properties = new HashMap<>();
-
 	private KnotClassLoaderInterface classLoader;
 	private boolean isDevelopment;
 	private EnvType envType;
@@ -46,6 +48,11 @@ public final class Knot extends FabricLauncherBase {
 	private GameProvider provider;
 
 	protected Knot(EnvType type, File gameJarFile) {
+		this.logger = new LoggingInterface.Delegated(new LoggingInterface.Stdout((logType, prefix, message) -> {
+			final LocalDateTime now = LocalDateTime.now();
+
+			return String.format("[%s:%s:%s] [%s/%s] (%s) %s", now.getHour(), now.getMinute(), now.getSecond(), Thread.currentThread().getName(), logType.getName().toUpperCase(Locale.ROOT), prefix, message);
+		}, "Knot", false));
 		this.envType = type;
 		this.gameJarFile = gameJarFile;
 	}
@@ -84,6 +91,9 @@ public final class Knot extends FabricLauncherBase {
 				break;
 			}
 		}
+
+		logger.info("Switching to game logger");
+		logger.setLogger(provider.createLogger("Knot"));
 
 		if (provider != null) {
 			LOGGER.info("Loading for game " + provider.getGameName() + " " + provider.getRawGameVersion());
@@ -170,6 +180,11 @@ public final class Knot extends FabricLauncherBase {
 				return null;
 			}
 		}).filter(Objects::nonNull).collect(Collectors.toSet());
+	}
+
+	@Override
+	public LoggingInterface getLaunchLogger() {
+		return this.logger;
 	}
 
 	@Override

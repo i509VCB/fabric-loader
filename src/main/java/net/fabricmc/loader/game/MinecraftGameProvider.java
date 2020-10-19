@@ -26,6 +26,8 @@ import net.fabricmc.loader.metadata.BuiltinModMetadata;
 import net.fabricmc.loader.minecraft.McVersionLookup;
 import net.fabricmc.loader.minecraft.McVersionLookup.McVersion;
 import net.fabricmc.loader.util.Arguments;
+import net.fabricmc.loader.util.LoggingInterface;
+
 import java.io.File;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
@@ -37,6 +39,9 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class MinecraftGameProvider implements GameProvider {
 	private EnvType envType;
@@ -211,6 +216,11 @@ public class MinecraftGameProvider implements GameProvider {
 	}
 
 	@Override
+	public LoggingInterface createLogger(String name) {
+		return new Log4jLogger(name);
+	}
+
+	@Override
 	public void launch(ClassLoader loader) {
 		String targetClass = entrypoint;
 
@@ -224,6 +234,34 @@ public class MinecraftGameProvider implements GameProvider {
 			m.invoke(null, (Object) arguments.toArray());
 		} catch (Exception e) {
 			throw new RuntimeException(e);
+		}
+	}
+
+	static class Log4jLogger implements LoggingInterface {
+		private final Logger logger;
+
+		Log4jLogger(String name) {
+			this.logger	= LogManager.getFormatterLogger(name);
+		}
+
+		@Override
+		public void info(String message, Throwable t) {
+			this.logger.info(message, t);
+		}
+
+		@Override
+		public void warn(String message, Throwable t) {
+			this.logger.warn(message, t);
+		}
+
+		@Override
+		public void error(String message, Throwable t) {
+			this.logger.error(message, t);
+		}
+
+		@Override
+		public void debug(String message, Throwable t) {
+			this.logger.debug(message, t);
 		}
 	}
 }

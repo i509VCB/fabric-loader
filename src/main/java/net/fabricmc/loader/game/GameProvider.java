@@ -19,6 +19,7 @@ package net.fabricmc.loader.game;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.metadata.ModMetadata;
 import net.fabricmc.loader.entrypoint.EntrypointTransformer;
+import net.fabricmc.loader.util.LoggingInterface;
 
 import java.net.URL;
 import java.nio.file.Path;
@@ -49,7 +50,9 @@ public interface GameProvider {
 		return true;
 	}
 
-	public static class BuiltinMod {
+	LoggingInterface createLogger(String name);
+
+	class BuiltinMod {
 		public BuiltinMod(URL url, ModMetadata metadata) {
 			this.url = url;
 			this.metadata = metadata;

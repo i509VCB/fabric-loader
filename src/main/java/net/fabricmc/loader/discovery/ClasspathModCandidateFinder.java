@@ -42,7 +42,7 @@ public class ClasspathModCandidateFinder implements ModCandidateFinder {
 					try {
 						modsList.add(UrlUtil.getSource("fabric.mod.json", mods.nextElement()));
 					} catch (UrlConversionException e) {
-						loader.getLogger().debug(e);
+						loader.getOldLogger().debug(e);
 					}
 				}
 
@@ -50,7 +50,7 @@ public class ClasspathModCandidateFinder implements ModCandidateFinder {
 				// As such, we're adding them to the classpath here and now.
 				// To avoid tripping loader-side checks, we also don't add URLs already in modsList.
 				// TODO: Perhaps a better solution would be to add the Sources of all parsed entrypoints. But this will do, for now.
-				loader.getLogger().debug("[ClasspathModCandidateFinder] Adding dev classpath directories to classpath.");
+				loader.getOldLogger().debug("[ClasspathModCandidateFinder] Adding dev classpath directories to classpath.");
 				String[] classpathPropertyInput = System.getProperty("java.class.path", "").split(File.pathSeparator);
 				for (String s : classpathPropertyInput) {
 					if (s.isEmpty() || s.equals("*") || s.endsWith(File.separator + "*")) continue;
@@ -62,7 +62,7 @@ public class ClasspathModCandidateFinder implements ModCandidateFinder {
 								FabricLauncherBase.getLauncher().propose(url);
 							}
 						} catch (UrlConversionException e) {
-							loader.getLogger().warn("[ClasspathModCandidateFinder] Failed to add dev directory " + file.getAbsolutePath() + " to classpath!", e);
+							loader.getOldLogger().warn("[ClasspathModCandidateFinder] Failed to add dev directory " + file.getAbsolutePath() + " to classpath!", e);
 						}
 					}
 				}
@@ -75,13 +75,13 @@ public class ClasspathModCandidateFinder implements ModCandidateFinder {
 			try {
 				urls = Stream.of(FabricLauncherBase.getLauncher().getClass().getProtectionDomain().getCodeSource().getLocation());
 			} catch (Throwable t) {
-				loader.getLogger().debug("Could not fallback to itself for mod candidate lookup!", t);
+				loader.getOldLogger().debug("Could not fallback to itself for mod candidate lookup!", t);
 				urls = Stream.empty();
 			}
 		}
 
 		urls.forEach((url) -> {
-			loader.getLogger().debug("[ClasspathModCandidateFinder] Processing " + url.getPath());
+			loader.getOldLogger().debug("[ClasspathModCandidateFinder] Processing " + url.getPath());
 			File f;
 			try {
 				f = UrlUtil.asFile(url);
